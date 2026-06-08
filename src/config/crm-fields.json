@@ -1,0 +1,15 @@
+{
+  "separador": ";",
+  "encoding": "UTF-8",
+  "campos": [
+    { "columna_crm": "NOMBRE_CLIENTE",       "campo_claude": "nombre_cliente",        "obligatorio": true  },
+    { "columna_crm": "TIPO_ESTABLECIMIENTO", "campo_claude": "tipo_establecimiento",  "obligatorio": false },
+    { "columna_crm": "LOCALIDAD",            "campo_claude": "localidad",             "obligatorio": false },
+    { "columna_crm": "PRODUCTOS_ACTUALES",   "campo_claude": "productos_actuales",    "obligatorio": false },
+    { "columna_crm": "COMPETENCIA",          "campo_claude": "competencia",           "obligatorio": false },
+    { "columna_crm": "OPORTUNIDAD_EUR",      "campo_claude": "oportunidad_estimada_eur","obligatorio":false},
+    { "columna_crm": "PROXIMA_ACCION",       "campo_claude": "proxima_accion",        "obligatorio": false },
+    { "columna_crm": "FECHA_VISITA",         "campo_claude": "fecha_visita",          "obligatorio": true  },
+    { "columna_crm": "COMERCIAL",            "campo_claude": "comercial",             "obligatorio": true  }
+  ]
+}
