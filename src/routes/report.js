@@ -5,16 +5,16 @@ const { generateReport } = require('../services/claude');
 const { createDocx } = require('../services/docx');
 const { createPdf }  = require('../services/pdf');
 const { createCsv }  = require('../services/csv');
+const { enviarInforme } = require('../services/email');
 
 router.post('/generate', async (req, res) => {
   try {
     const { texto, fotos, tipoInforme, formatos, comercialId } = req.body;
 
-    // Validar que venga lo minimo necesario
     if (!texto)       return res.status(400).json({ error: 'Falta el texto de la visita' });
     if (!comercialId) return res.status(400).json({ error: 'Falta el ID del comercial' });
 
-    // 1. Llamar a Claude (lee archivos del comercial + texto + fotos)
+    // 1. Llamar a Claude
     const datos = await generateReport({ texto, fotos, tipoInforme, comercialId });
 
     // 2. Generar los archivos pedidos
@@ -34,7 +34,12 @@ router.post('/generate', async (req, res) => {
       archivos.csv = buf.toString('base64');
     }
 
+    // 3. Enviar email (sin bloquear la respuesta si falla)
+    enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos: archivos })
+      .catch(err => console.error('Error enviando email:', err.message));
+
     res.json({ ok: true, datos, archivos });
+
   } catch (err) {
     console.error('Error generando informe:', err);
     res.status(500).json({ ok: false, error: err.message });
