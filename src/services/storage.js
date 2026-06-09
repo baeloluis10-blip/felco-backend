@@ -2,11 +2,15 @@
 // Este archivo se encarga de guardar, listar y leer los archivos
 // de cada comercial en Supabase Storage.
 
-const { createClient } = require('@supabase/supabase-js');
+cconst { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+  process.env.SUPABASE_KEY,
+  {
+    realtime: { transport: ws }
+  }
 );
 
 const BUCKET = 'comerciales-archivos';
