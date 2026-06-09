@@ -2,7 +2,7 @@
 // Este archivo se encarga de guardar, listar y leer los archivos
 // de cada comercial en Supabase Storage.
 
-cconst { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
 
 const supabase = createClient(
