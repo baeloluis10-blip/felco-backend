@@ -1,24 +1,27 @@
-// backend/src/routes/files.js
 const express = require('express');
 const multer  = require('multer');
 const router  = express.Router();
 const storage = require('../services/storage');
 
-// multer gestiona la subida de archivos al servidor
-// memoryStorage = guarda en memoria temporalmente (no en disco)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }  // Maximo 20 MB por archivo
+  limits: { fileSize: 200 * 1024 * 1024 }  // 200 MB
 });
 
-// ── SUBIR UN ARCHIVO ──────────────────────────────────────────
-// La app envia: el archivo + el ID del comercial
-router.post('/upload', upload.single('archivo'), async (req, res) => {
+router.post('/upload', (req, res, next) => {
+  upload.single('archivo')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ ok: false, error: `Error multer: ${err.message}` });
+    } else if (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     const { comercialId } = req.body;
     if (!comercialId) return res.status(400).json({ error: 'Falta comercialId' });
     if (!req.file)    return res.status(400).json({ error: 'Falta el archivo' });
-
     const path = await storage.uploadFile(
       comercialId,
       req.file.originalname,
@@ -31,7 +34,6 @@ router.post('/upload', upload.single('archivo'), async (req, res) => {
   }
 });
 
-// ── LISTAR ARCHIVOS DE UN COMERCIAL ──────────────────────────
 router.get('/list/:comercialId', async (req, res) => {
   try {
     const archivos = await storage.listFiles(req.params.comercialId);
@@ -41,7 +43,6 @@ router.get('/list/:comercialId', async (req, res) => {
   }
 });
 
-// ── ELIMINAR UN ARCHIVO ───────────────────────────────────────
 router.delete('/:comercialId/:fileName', async (req, res) => {
   try {
     await storage.deleteFile(req.params.comercialId, req.params.fileName);
