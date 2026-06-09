@@ -48,6 +48,7 @@ router.delete('/:comercialId/:fileName', async (req, res) => {
     await storage.deleteFile(req.params.comercialId, req.params.fileName);
     res.json({ ok: true });
   } catch (err) {
+    console.error('ERROR UPLOAD:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
