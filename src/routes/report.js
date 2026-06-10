@@ -8,42 +8,42 @@ const { createCsv }  = require('../services/csv');
 const { enviarInforme } = require('../services/email');
 
 router.post('/generate', async (req, res) => {
-  try {
-    const { texto, fotos, tipoInforme, formatos, comercialId } = req.body;
+  const { texto, fotos, tipoInforme, formatos, comercialId } = req.body;
 
-    if (!texto)       return res.status(400).json({ error: 'Falta el texto de la visita' });
-    if (!comercialId) return res.status(400).json({ error: 'Falta el ID del comercial' });
+  if (!texto)       return res.status(400).json({ error: 'Falta el texto de la visita' });
+  if (!comercialId) return res.status(400).json({ error: 'Falta el ID del comercial' });
 
-    // 1. Llamar a Claude
-    const datos = await generateReport({ texto, fotos, tipoInforme, comercialId });
+  // Responder inmediatamente
+  res.json({ ok: true, message: 'Informe en proceso. Lo recibirás por email en unos minutos.' });
 
-    // 2. Generar los archivos pedidos
-    const archivos = {};
-    const fmts = formatos || ['word', 'csv'];
+  // Procesar en segundo plano
+  (async () => {
+    try {
+      const datos = await generateReport({ texto, fotos, tipoInforme, comercialId });
 
-    if (fmts.includes('word')) {
-      const buf = await createDocx(datos, tipoInforme);
-      archivos.word = buf.toString('base64');
+      const archivos = {};
+      const fmts = formatos || ['word', 'csv'];
+
+      if (fmts.includes('word')) {
+        const buf = await createDocx(datos, tipoInforme);
+        archivos.word = buf.toString('base64');
+      }
+      if (fmts.includes('pdf')) {
+        const buf = await createPdf(datos, tipoInforme);
+        archivos.pdf = buf.toString('base64');
+      }
+      if (fmts.includes('csv')) {
+        const buf = await createCsv(datos.campos_crm);
+        archivos.csv = buf.toString('base64');
+      }
+
+      await enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos: archivos });
+      console.log(`Informe enviado: ${comercialId} - ${tipoInforme}`);
+
+    } catch (err) {
+      console.error('Error generando informe en background:', err.message);
     }
-    if (fmts.includes('pdf')) {
-      const buf = await createPdf(datos, tipoInforme);
-      archivos.pdf = buf.toString('base64');
-    }
-    if (fmts.includes('csv')) {
-      const buf = await createCsv(datos.campos_crm);
-      archivos.csv = buf.toString('base64');
-    }
-
-    // 3. Enviar email (sin bloquear la respuesta si falla)
-    enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos: archivos })
-      .catch(err => console.error('Error enviando email:', err.message));
-
-    res.json({ ok: true, datos, archivos });
-
-  } catch (err) {
-    console.error('Error generando informe:', err);
-    res.status(500).json({ ok: false, error: err.message });
-  }
+  })();
 });
 
 module.exports = router;
