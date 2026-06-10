@@ -104,7 +104,7 @@ async function enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos
 
   await resend.emails.send({
     from: 'FELCO App <onboarding@resend.dev>',
-    to: 'lbaelo@felco.com',
+    to: 'baeloluis10@gmail.com',
     subject,
     html,
     attachments,
