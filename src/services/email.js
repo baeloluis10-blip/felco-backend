@@ -1,13 +1,7 @@
 // backend/src/services/email.js
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'lbaelo@felco.com',
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos }) {
   const fecha = new Date().toLocaleDateString('es-ES');
@@ -21,7 +15,7 @@ async function enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos
     crm: 'CRM',
   }[tipoInforme] || tipoInforme;
 
-  const subject = `Informe ${tipoLabel} — ${cliente} ${localidad} — ${fecha}`;
+  const subject = `Informe ${tipoLabel} — ${cliente}${localidad ? ', ' + localidad : ''} — ${fecha}`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto;">
@@ -30,7 +24,7 @@ async function enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos
         <span style="color: white; font-size: 14px; float: right;">Informe ${tipoLabel}</span>
       </div>
 
-      <h2 style="color: #333;">${cliente} — ${localidad}</h2>
+      <h2 style="color: #333;">${cliente}${localidad ? ' — ' + localidad : ''}</h2>
       <p style="color: #666;">Fecha: ${fecha} | Comercial: ${comercialId}</p>
 
       <h3 style="color: #E30613;">Resumen de la visita</h3>
@@ -97,19 +91,19 @@ async function enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos
   const attachments = [];
   if (archivosAdjuntos?.word) {
     attachments.push({
-      filename: `informe_${cliente}_${fecha.replace(/\//g, '-')}.docx`,
-      content: Buffer.from(archivosAdjuntos.word, 'base64'),
+      filename: `informe_${cliente.replace(/\s/g, '_')}_${fecha.replace(/\//g, '-')}.docx`,
+      content: archivosAdjuntos.word,
     });
   }
   if (archivosAdjuntos?.pdf) {
     attachments.push({
-      filename: `informe_${cliente}_${fecha.replace(/\//g, '-')}.pdf`,
-      content: Buffer.from(archivosAdjuntos.pdf, 'base64'),
+      filename: `informe_${cliente.replace(/\s/g, '_')}_${fecha.replace(/\//g, '-')}.pdf`,
+      content: archivosAdjuntos.pdf,
     });
   }
 
-  await transporter.sendMail({
-    from: '"FELCO App" <lbaelo@felco.com>',
+  await resend.emails.send({
+    from: 'FELCO App <onboarding@resend.dev>',
     to: 'lbaelo@felco.com',
     subject,
     html,
