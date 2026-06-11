@@ -1,14 +1,17 @@
 // backend/src/services/docx.js
+const path = require('path');
+const fs   = require('fs');
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-  AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel,
-  PageBreak, TabStopType, TabStopPosition
+  AlignmentType, BorderStyle, WidthType, ShadingType, ImageRun
 } = require('docx');
 
-const ROJO = 'E30613';
+const ROJO       = 'E30613';
 const GRIS_OSCURO = '3D4F52';
-const GRIS_CLARO = 'F5F5F5';
-const NEGRO = '222222';
+const GRIS_CLARO  = 'F5F5F5';
+const NEGRO       = '222222';
+
+const LOGO_PATH = path.join(__dirname, '../../assets/logo-felco.jpg');
 
 function parrafoTitulo(texto) {
   return new Paragraph({
@@ -158,25 +161,47 @@ function tablaCompetencia(competencia) {
 }
 
 async function createDocx(datos, tipoInforme) {
-  const fecha = new Date().toLocaleDateString('es-ES');
-  const cliente = datos.cliente?.nombre || 'Cliente no especificado';
-  const localidad = datos.cliente?.localidad || '';
-  const tipoLabel = { producto: 'Producto', marketing: 'Marketing', direccion: 'Dirección', crm: 'CRM' }[tipoInforme] || tipoInforme;
+  const fecha      = new Date().toLocaleDateString('es-ES');
+  const cliente    = datos.cliente?.nombre || 'Cliente no especificado';
+  const localidad  = datos.cliente?.localidad || '';
+  const tipoLabel  = {
+    producto: 'Producto', marketing: 'Marketing',
+    direccion: 'Dirección', crm: 'CRM',
+    it: 'IT', cliente: 'Cliente'
+  }[tipoInforme] || tipoInforme;
 
   const children = [];
 
+  // ── LOGO ─────────────────────────────────────────────────────
+  try {
+    const logoBuffer = fs.readFileSync(LOGO_PATH);
+    children.push(new Paragraph({
+      spacing: { before: 0, after: 200 },
+      children: [new ImageRun({
+        data: logoBuffer,
+        transformation: { width: 180, height: 54 },
+        type: 'jpg',
+      })]
+    }));
+  } catch (e) {
+    console.warn('Logo no encontrado, se omite:', e.message);
+    // Si no hay logo, ponemos el texto como fallback
+    children.push(new Paragraph({
+      spacing: { before: 0, after: 60 },
+      children: [new TextRun({
+        text: 'FELCO · ALPEN Swiss Tools España',
+        font: 'Arial', size: 28, bold: true, color: ROJO
+      })]
+    }));
+  }
+
   // ── CABECERA ──────────────────────────────────────────────────
   children.push(new Paragraph({
-    spacing: { before: 0, after: 60 },
-    children: [
-      new TextRun({ text: 'FELCO · ALPEN Swiss Tools España', font: 'Arial', size: 28, bold: true, color: ROJO }),
-    ]
-  }));
-  children.push(new Paragraph({
     spacing: { before: 0, after: 200 },
-    children: [
-      new TextRun({ text: `Informe ${tipoLabel} — ${cliente}${localidad ? ', ' + localidad : ''} — ${fecha}`, font: 'Arial', size: 20, color: GRIS_OSCURO }),
-    ]
+    children: [new TextRun({
+      text: `Informe ${tipoLabel} — ${cliente}${localidad ? ', ' + localidad : ''} — ${fecha}`,
+      font: 'Arial', size: 20, color: GRIS_OSCURO
+    })]
   }));
   children.push(lineaDivisoria());
 
@@ -224,11 +249,10 @@ async function createDocx(datos, tipoInforme) {
     children.push(tablaProductos(datos.productos_recomendados));
   }
 
-  // ── SECCIÓN POR DESTINATARIO ──────────────────────────────────
+  // ── SECCIÓN PRODUCTO ──────────────────────────────────────────
   if (tipoInforme === 'producto' && datos.informe_producto) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Análisis de producto'));
-
     if (datos.informe_producto.gaps_detectados?.length > 0) {
       children.push(parrafoSubtitulo('Gaps detectados'));
       datos.informe_producto.gaps_detectados.forEach(g => children.push(parrafoBullet(g)));
@@ -239,12 +263,12 @@ async function createDocx(datos, tipoInforme) {
     }
   }
 
+  // ── SECCIÓN MARKETING ─────────────────────────────────────────
   if (tipoInforme === 'marketing' && datos.informe_marketing) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Informe Marketing'));
     children.push(parrafoSubtitulo('Propuesta de valor'));
     children.push(parrafoTexto(datos.informe_marketing.propuesta_valor || ''));
-
     if (datos.informe_marketing.argumentario_cliente_final?.length > 0) {
       children.push(parrafoSubtitulo('Argumentario para cliente final'));
       datos.informe_marketing.argumentario_cliente_final.forEach(a => children.push(parrafoBullet(a)));
@@ -253,6 +277,7 @@ async function createDocx(datos, tipoInforme) {
     children.push(parrafoTexto(datos.informe_marketing.campana_junio_relevante || ''));
   }
 
+  // ── SECCIÓN DIRECCIÓN ─────────────────────────────────────────
   if (tipoInforme === 'direccion' && datos.informe_direccion) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Informe Dirección'));
@@ -260,11 +285,46 @@ async function createDocx(datos, tipoInforme) {
     children.push(parrafoTexto(datos.informe_direccion.resumen_ejecutivo || ''));
     children.push(parrafoSubtitulo('Oportunidad estimada'));
     children.push(parrafoTexto(`${datos.informe_direccion.oportunidad_estimada_eur || 0} EUR`));
-
     if (datos.informe_direccion.proximos_pasos?.length > 0) {
       children.push(parrafoSubtitulo('Próximos pasos'));
       datos.informe_direccion.proximos_pasos.forEach(p => children.push(parrafoBullet(p)));
     }
+  }
+
+  // ── SECCIÓN IT ────────────────────────────────────────────────
+  if (tipoInforme === 'it' && datos.informe_it) {
+    children.push(lineaDivisoria());
+    children.push(parrafoTitulo('Informe IT'));
+    children.push(parrafoSubtitulo('Sistemas del cliente'));
+    children.push(parrafoTexto(datos.informe_it.sistemas_cliente || '—'));
+    if (datos.informe_it.integraciones_solicitadas?.length > 0) {
+      children.push(parrafoSubtitulo('Integraciones solicitadas'));
+      datos.informe_it.integraciones_solicitadas.forEach(i => children.push(parrafoBullet(i)));
+    }
+    children.push(parrafoSubtitulo('Prioridad'));
+    children.push(parrafoTexto(datos.informe_it.prioridad || '—'));
+    if (datos.informe_it.acciones_it?.length > 0) {
+      children.push(parrafoSubtitulo('Acciones recomendadas'));
+      datos.informe_it.acciones_it.forEach(a => children.push(parrafoBullet(a)));
+    }
+  }
+
+  // ── SECCIÓN CLIENTE ───────────────────────────────────────────
+  if (tipoInforme === 'cliente' && datos.informe_cliente) {
+    children.push(lineaDivisoria());
+    children.push(parrafoTitulo('Propuesta comercial'));
+    children.push(parrafoSubtitulo('Propuesta de valor'));
+    children.push(parrafoTexto(datos.informe_cliente.propuesta_valor_personalizada || ''));
+    if (datos.informe_cliente.argumentario_vs_competencia?.length > 0) {
+      children.push(parrafoSubtitulo('Por qué FELCO / ALPEN'));
+      datos.informe_cliente.argumentario_vs_competencia.forEach(a => children.push(parrafoBullet(a)));
+    }
+    children.push(parrafoSubtitulo('Oferta recomendada'));
+    children.push(parrafoTexto(datos.informe_cliente.oferta_recomendada || ''));
+    children.push(parrafoSubtitulo('Campaña activa'));
+    children.push(parrafoTexto(datos.informe_cliente.urgencia_campana || ''));
+    children.push(parrafoSubtitulo('Próximo paso'));
+    children.push(parrafoTexto(datos.informe_cliente.proximo_paso || ''));
   }
 
   // ── PIE DE PÁGINA ─────────────────────────────────────────────

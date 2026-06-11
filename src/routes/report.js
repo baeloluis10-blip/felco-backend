@@ -13,37 +13,36 @@ router.post('/generate', async (req, res) => {
   if (!texto)       return res.status(400).json({ error: 'Falta el texto de la visita' });
   if (!comercialId) return res.status(400).json({ error: 'Falta el ID del comercial' });
 
-  // Responder inmediatamente
-  res.json({ ok: true, message: 'Informe en proceso. Lo recibirás por email en unos minutos.' });
+  try {
+    const datos = await generateReport({ texto, fotos, tipoInforme, comercialId });
 
-  // Procesar en segundo plano
-  (async () => {
-    try {
-      const datos = await generateReport({ texto, fotos, tipoInforme, comercialId });
+    const archivos = {};
+    const fmts = formatos || ['word', 'csv'];
 
-      const archivos = {};
-      const fmts = formatos || ['word', 'csv'];
-
-      if (fmts.includes('word')) {
-        const buf = await createDocx(datos, tipoInforme);
-        archivos.word = buf.toString('base64');
-      }
-      if (fmts.includes('pdf')) {
-        const buf = await createPdf(datos, tipoInforme);
-        archivos.pdf = buf.toString('base64');
-      }
-      if (fmts.includes('csv')) {
-        const buf = await createCsv(datos.campos_crm);
-        archivos.csv = buf.toString('base64');
-      }
-
-      await enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos: archivos });
-      console.log(`Informe enviado: ${comercialId} - ${tipoInforme}`);
-
-    } catch (err) {
-      console.error('Error generando informe en background:', err.message);
+    if (fmts.includes('word')) {
+      const buf = await createDocx(datos, tipoInforme);
+      archivos.word = buf.toString('base64');
     }
-  })();
+    if (fmts.includes('pdf')) {
+      const buf = await createPdf(datos, tipoInforme);
+      archivos.pdf = buf.toString('base64');
+    }
+    if (fmts.includes('csv')) {
+      const buf = await createCsv(datos.campos_crm);
+      archivos.csv = buf.toString('base64');
+    }
+
+    // Enviar email en segundo plano (no bloquea la respuesta)
+    enviarInforme({ datos, tipoInforme, comercialId, archivosAdjuntos: archivos })
+      .catch(err => console.error('Error enviando email:', err.message));
+
+    // Responder con los archivos generados
+    res.json({ ok: true, datos, archivos });
+
+  } catch (err) {
+    console.error('Error generando informe:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

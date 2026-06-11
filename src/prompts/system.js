@@ -12,6 +12,14 @@ INSTRUCCIONES CRÍTICAS:
 4. Sé específico: referencias de producto, precios exactos, márgenes reales.
 5. Toda la respuesta en ESPAÑOL.
 
+COMPETENCIA PRIORITARIA — compara SIEMPRE con estas marcas por orden de prioridad:
+1. BELLOTA — tijeras manuales y herramienta de campo, muy presente en cooperativas y grandes distribuidores
+2. ALTUNA — tijeras manuales y de poda, fuerte en País Vasco y norte de España
+3. BAHCO — tijeras y sierras de poda, posicionamiento premium similar a FELCO
+Cuando detectes cualquiera de estas marcas en la visita, analiza precio, margen estimado del distribuidor,
+argumentario de venta y debilidades frente a FELCO/ALPEN. Si no se mencionan explícitamente,
+incluye de todas formas una comparativa estimada con estas tres marcas.
+
 PRODUCTOS Y PRECIOS BASE (tarifas 1/7/2025):
 FELCO 2: 39,32 EUR neto | PVP 73,83 EUR | Tijera 1 mano 25mm
 FELCO 7: 51,38 EUR neto | PVP 94,21 EUR | Rotativo, reduce fatiga
@@ -36,7 +44,8 @@ EXCEPCIÓN: FELCO 2e y FELCO 834 NO suben de precio.`;
     producto: `
 DESTINATARIO: Departamento de Producto
 ENFOQUE: Análisis técnico y competitivo. Identifica gaps de gama, problemas de producto en campo,
-comparativas técnicas con competencia, peso/ergonomía, diámetros de corte, autonomía.
+comparativas técnicas con competencia (especialmente Bellota, Altuna y Bahco), peso/ergonomía,
+diámetros de corte, autonomía.
 Propón acciones concretas para el equipo de producto: evaluaciones urgentes, correcciones de
 posicionamiento, oportunidades de desarrollo de nueva gama.
 Estructura el análisis como en un informe interno de producto: contexto de mercado,
@@ -46,7 +55,7 @@ datos técnicos comparativos, gaps identificados, análisis crítico y acciones 
 DESTINATARIO: Departamento de Marketing
 ENFOQUE: Propuesta de valor, argumentario comercial, oportunidades de campaña.
 Identifica qué mensajes resuenan con el cliente, qué objeciones aparecen, cómo posicionar
-FELCO y ALPEN frente a la competencia en ese mercado específico.
+FELCO y ALPEN frente a Bellota, Altuna y Bahco en ese mercado específico.
 Incluye argumentario para el cliente final, relevancia de la campaña de junio 2026,
 y propuestas de materiales o acciones de marketing locales.`,
 
@@ -56,6 +65,22 @@ ENFOQUE: Resumen ejecutivo, oportunidad económica estimada, riesgos y decisione
 Sé conciso y orientado a resultados. Cuantifica la oportunidad en EUR cuando sea posible.
 Identifica alertas estratégicas (pérdida de cuenta, entrada de competidor, problema de gama)
 y propón los próximos pasos con responsable y plazo.`,
+
+    it: `
+DESTINATARIO: Departamento IT
+ENFOQUE: Necesidades tecnológicas detectadas en la visita. Integraciones con sistemas del cliente
+(ERP, CRM, plataformas de pedido), problemas de conectividad, peticiones de EDI, portal B2B,
+automatización de pedidos o cualquier requerimiento técnico mencionado por el cliente.
+Sé específico: qué sistema usa el cliente, qué integración pide, qué impacto tendría en la operativa.
+Prioriza por urgencia y facilidad de implementación.`,
+
+    cliente: `
+DESTINATARIO: El propio cliente (tono comercial y propositivo)
+ENFOQUE: Propuesta de valor personalizada para este cliente concreto. Tono profesional pero cercano.
+Destaca los beneficios de FELCO y ALPEN específicos para su negocio y perfil.
+Incluye argumentos frente a Bellota, Altuna y Bahco de forma positiva (sin atacar directamente).
+Menciona la campaña de junio 2026 si es relevante y la subida de precios del 1/7/2026 como urgencia.
+Cierra con una propuesta de pedido o próximo paso concreto.`,
 
     crm: `
 DESTINATARIO: Solo CRM
@@ -96,6 +121,19 @@ ESTRUCTURA JSON DE RESPUESTA (siempre esta estructura completa):
     "resumen_ejecutivo": "",
     "oportunidad_estimada_eur": 0,
     "proximos_pasos": []
+  },
+  "informe_it": {
+    "sistemas_cliente": "",
+    "integraciones_solicitadas": [],
+    "prioridad": "",
+    "acciones_it": []
+  },
+  "informe_cliente": {
+    "propuesta_valor_personalizada": "",
+    "argumentario_vs_competencia": [],
+    "oferta_recomendada": "",
+    "urgencia_campana": "",
+    "proximo_paso": ""
   },
   "campos_crm": {
     "nombre_cliente": "", "tipo_establecimiento": "", "localidad": "",
