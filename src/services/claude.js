@@ -33,7 +33,7 @@ async function prepareArchivos(comercialId) {
     const archivos = await listFiles(comercialId);
     const contenidos = [];
     let totalChars = 0;
-    const MAX_CHARS = 50000;
+    const MAX_CHARS = 20000;
 
     for (const archivo of archivos.slice(0, 10)) {
       if (totalChars >= MAX_CHARS) break;
@@ -71,7 +71,7 @@ async function prepareArchivos(comercialId) {
         }
         const texto = await xlsxToText(buffer, archivo.name);
         if (texto) {
-          const truncado = texto.substring(0, Math.min(6000, MAX_CHARS - totalChars));
+          const truncado = texto.substring(0, Math.min(3000, MAX_CHARS - totalChars));
           contenidos.push({ type: 'text', text: truncado });
           totalChars += truncado.length;
           console.log(`XLSX convertido a texto: ${archivo.name} (${truncado.length} chars)`);
