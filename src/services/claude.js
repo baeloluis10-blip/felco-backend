@@ -98,7 +98,7 @@ async function prepareArchivos(comercialId) {
 async function generateReport({ texto, fotos, tipoInforme, comercialId }) {
   const content = [];
 
-  const archivosComercial = await prepareArchivos(comercialId);
+  const archivosComercial = []; // await prepareArchivos(comercialId);
   if (archivosComercial.length > 0) {
     content.push({
       type: 'text',
