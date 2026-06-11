@@ -78,8 +78,8 @@ async function prepareArchivos(comercialId) {
       const ext = archivo.name.split('.').pop().toLowerCase();
 
       if (ext === 'pdf') {
-        if (buffer.length < 500) {
-          console.warn(`PDF vacío omitido: ${archivo.name} (${buffer.length} bytes)`);
+        if (buffer.length < 500 || buffer.length > 5000000) {
+          console.warn(`PDF omitido (vacío o demasiado grande): ${archivo.name} (${buffer.length} bytes)`);
           continue;
         }
         const base64 = buffer.toString('base64');
@@ -100,7 +100,6 @@ async function prepareArchivos(comercialId) {
         });
 
       } else if (false && ['xlsx', 'xls'].includes(ext)) {
-        // Omitir BBDDclientes — se procesa por separado
         if (archivo.name.toLowerCase().includes('bbddclientes')) {
           console.log(`Omitiendo BBDD clientes de archivos: ${archivo.name}`);
           continue;
@@ -134,8 +133,6 @@ async function prepareArchivos(comercialId) {
 async function generateReport({ texto, fotos, tipoInforme, comercialId }) {
   const content = [];
 
-  // ── BUSCAR CLIENTE EN BBDD ────────────────────────────────────
-  // Extraer nombre del cliente del texto para buscarlo en la BBDD
   const nombreMatch = texto.match(/DATOS CLIENTE CRM:\s*Nombre:\s*([^\n]+)/);
   const nombreCliente = nombreMatch ? nombreMatch[1].trim() : null;
 
@@ -161,12 +158,11 @@ Usa estos datos para rellenar el campo "cliente" del JSON con la máxima precisi
     }
   }
 
-  // ── ARCHIVOS DEL COMERCIAL ────────────────────────────────────
   const archivosComercial = await prepareArchivos(comercialId);
   if (archivosComercial.length > 0) {
     content.push({
       type: 'text',
-      text: `Tienes acceso a ${archivosComercial.length} archivos de este comercial con tarifas y catálogos reales. Úsalos para ser específico en precios y referencias.`
+      text: `Tienes acceso a ${archivosComercial.length} archivos de este comercial. Úsalos para ser específico en precios y referencias.`
     });
     content.push(...archivosComercial);
   }
@@ -180,8 +176,7 @@ Comercial: ${comercialId}
 DESCRIPCIÓN DE LA VISITA:
 ${texto}
 
-Genera el informe JSON completo según la estructura del system prompt.
-Usa los archivos del comercial para ser específico en precios y referencias.`
+Genera el informe JSON completo según la estructura del system prompt.`
   });
 
   if (fotos && fotos.length > 0) {
@@ -199,7 +194,7 @@ Usa los archivos del comercial para ser específico en precios y referencias.`
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-5',
-    max_tokens: 2048,
+    max_tokens: 4096,
     system: getSystemPrompt(tipoInforme),
     messages: [{ role: 'user', content }]
   });
