@@ -28,12 +28,48 @@ async function xlsxToText(buffer, fileName) {
   }
 }
 
+async function buscarClienteEnBBDD(comercialId, nombreCliente) {
+  try {
+    const archivos = await listFiles(comercialId);
+    const bbdd = archivos.find(a => a.name.toLowerCase().includes('bbddclientes'));
+    if (!bbdd) return null;
+
+    const buffer = await downloadFile(comercialId, bbdd.name);
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const hoja = workbook.Sheets[workbook.SheetNames[0]];
+    const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+
+    const q = nombreCliente.toLowerCase();
+    const fila = filas.find(f =>
+      (f['Customer Name'] || '').toLowerCase().includes(q) ||
+      (f['Search name'] || '').toLowerCase().includes(q) ||
+      (f['Name'] || '').toLowerCase().includes(q)
+    );
+
+    if (!fila) return null;
+
+    return {
+      nombre:     fila['Customer Name'] || fila['Name'] || '',
+      localidad:  fila['Destination'] || '',
+      cp:         fila['Postal Code'] || '',
+      telefono:   fila['Tel.'] || '',
+      email:      fila['E-Mail'] || '',
+      customerNo: fila['Customer No.'] || '',
+      comercial:  fila['Sales Rep.'] || '',
+      tipo:       fila['Duty'] || '',
+    };
+  } catch (e) {
+    console.warn('Error buscando cliente en BBDD:', e.message);
+    return null;
+  }
+}
+
 async function prepareArchivos(comercialId) {
   try {
     const archivos = await listFiles(comercialId);
     const contenidos = [];
     let totalChars = 0;
-    const MAX_CHARS = 20000;
+    const MAX_CHARS = 10000;
 
     for (const archivo of archivos.slice(0, 10)) {
       if (totalChars >= MAX_CHARS) break;
@@ -64,9 +100,9 @@ async function prepareArchivos(comercialId) {
         });
 
       } else if (['xlsx', 'xls'].includes(ext)) {
-        // Omitir BBDDclientes — no es relevante para el informe
+        // Omitir BBDDclientes — se procesa por separado
         if (archivo.name.toLowerCase().includes('bbddclientes')) {
-          console.log(`Omitiendo BBDD clientes: ${archivo.name}`);
+          console.log(`Omitiendo BBDD clientes de archivos: ${archivo.name}`);
           continue;
         }
         const texto = await xlsxToText(buffer, archivo.name);
@@ -78,12 +114,12 @@ async function prepareArchivos(comercialId) {
         }
 
       } else if (ext === 'csv') {
-        const texto = buffer.toString('utf8').substring(0, 5000);
+        const texto = buffer.toString('utf8').substring(0, 3000);
         contenidos.push({ type: 'text', text: `--- ${archivo.name} ---\n${texto}` });
         totalChars += texto.length;
 
       } else {
-        const texto = buffer.toString('utf8').substring(0, 3000);
+        const texto = buffer.toString('utf8').substring(0, 2000);
         contenidos.push({ type: 'text', text: `--- ${archivo.name} ---\n${texto}` });
         totalChars += texto.length;
       }
@@ -98,7 +134,35 @@ async function prepareArchivos(comercialId) {
 async function generateReport({ texto, fotos, tipoInforme, comercialId }) {
   const content = [];
 
-  const archivosComercial = []; // await prepareArchivos(comercialId);
+  // ── BUSCAR CLIENTE EN BBDD ────────────────────────────────────
+  // Extraer nombre del cliente del texto para buscarlo en la BBDD
+  const nombreMatch = texto.match(/DATOS CLIENTE CRM:\s*Nombre:\s*([^\n]+)/);
+  const nombreCliente = nombreMatch ? nombreMatch[1].trim() : null;
+
+  let datosClienteBBDD = null;
+  if (nombreCliente) {
+    datosClienteBBDD = await buscarClienteEnBBDD(comercialId, nombreCliente);
+    if (datosClienteBBDD) {
+      console.log(`Cliente encontrado en BBDD: ${datosClienteBBDD.nombre}`);
+      content.push({
+        type: 'text',
+        text: `DATOS OFICIALES DEL CLIENTE (extraídos de BBDDclientes):
+Nombre: ${datosClienteBBDD.nombre}
+Tipo: ${datosClienteBBDD.tipo}
+Localidad: ${datosClienteBBDD.localidad}
+CP: ${datosClienteBBDD.cp}
+Teléfono: ${datosClienteBBDD.telefono}
+Email: ${datosClienteBBDD.email}
+Nº Cliente: ${datosClienteBBDD.customerNo}
+Comercial: ${datosClienteBBDD.comercial}
+
+Usa estos datos para rellenar el campo "cliente" del JSON con la máxima precisión.`
+      });
+    }
+  }
+
+  // ── ARCHIVOS DEL COMERCIAL ────────────────────────────────────
+  const archivosComercial = await prepareArchivos(comercialId);
   if (archivosComercial.length > 0) {
     content.push({
       type: 'text',
