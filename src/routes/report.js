@@ -10,7 +10,7 @@ const { enviarInforme } = require('../services/email');
 router.post('/generate', async (req, res) => {
   const { texto, fotos, tipoInforme, formatos, comercialId } = req.body;
 
-  console.log('Texto recibido chars:', texto?.length, 'Fotos:', fotos?.length);
+  console.log('Body recibido:', JSON.stringify({ texto: texto?.substring(0,50), textoLen: texto?.length, fotos: fotos?.length, tipoInforme, comercialId }));
 
   if (!texto)       return res.status(400).json({ error: 'Falta el texto de la visita' });
   if (!comercialId) return res.status(400).json({ error: 'Falta el ID del comercial' });
