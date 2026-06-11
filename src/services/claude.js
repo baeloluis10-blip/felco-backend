@@ -71,7 +71,7 @@ async function prepareArchivos(comercialId) {
         }
         const texto = await xlsxToText(buffer, archivo.name);
         if (texto) {
-          const truncado = texto.substring(0, Math.min(texto.length, MAX_CHARS - totalChars));
+          const truncado = texto.substring(0, Math.min(6000, MAX_CHARS - totalChars));
           contenidos.push({ type: 'text', text: truncado });
           totalChars += truncado.length;
           console.log(`XLSX convertido a texto: ${archivo.name} (${truncado.length} chars)`);
