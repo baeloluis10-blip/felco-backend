@@ -6,7 +6,7 @@ const {
   AlignmentType, BorderStyle, WidthType, ShadingType, ImageRun
 } = require('docx');
 
-const ROJO       = 'E30613';
+const ROJO        = 'E30613';
 const GRIS_OSCURO = '3D4F52';
 const GRIS_CLARO  = 'F5F5F5';
 const NEGRO       = '222222';
@@ -55,10 +55,14 @@ function lineaDivisoria() {
   });
 }
 
-function celdaHeader(texto) {
+function celdaHeader(texto, ancho) {
+  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
+  const borders = { top: border, bottom: border, left: border, right: border };
   return new TableCell({
+    borders,
+    width: { size: ancho, type: WidthType.DXA },
     shading: { fill: ROJO, type: ShadingType.CLEAR },
-    verticalAlign: 'center',
+    margins: { top: 80, bottom: 80, left: 120, right: 120 },
     children: [new Paragraph({
       children: [new TextRun({
         text: texto, font: 'Arial', size: 18, bold: true, color: 'FFFFFF'
@@ -68,94 +72,81 @@ function celdaHeader(texto) {
   });
 }
 
-function celdaTexto(texto, alineacion = AlignmentType.LEFT) {
-  return new TableCell({
-    children: [new Paragraph({
-      children: [new TextRun({ text: String(texto || ''), font: 'Arial', size: 18 })],
-      alignment: alineacion
-    })]
-  });
-}
-
 function tablaProductos(productos) {
+  const colWidths = [1200, 2000, 900, 900, 800, 2560];
+  const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
+  const borders = { top: border, bottom: border, left: border, right: border };
+
   const filaHeader = new TableRow({
     children: [
-      celdaHeader('Referencia'),
-      celdaHeader('Producto'),
-      celdaHeader('Neto EUR'),
-      celdaHeader('PVP EUR'),
-      celdaHeader('Margen'),
-      celdaHeader('Argumento comercial'),
+      celdaHeader('Referencia', colWidths[0]),
+      celdaHeader('Producto', colWidths[1]),
+      celdaHeader('Neto EUR', colWidths[2]),
+      celdaHeader('PVP EUR', colWidths[3]),
+      celdaHeader('Margen', colWidths[4]),
+      celdaHeader('Argumento comercial', colWidths[5]),
     ]
   });
 
   const filas = productos.map((p, i) => new TableRow({
     children: [
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: p.ref || '', font: 'Arial', size: 18, bold: true })] })]
-      }),
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: p.nombre || '', font: 'Arial', size: 18 })] })]
-      }),
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: `${p.precio_neto}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })]
-      }),
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: `${p.pvp}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })]
-      }),
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: `${p.margen_pct}%`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })]
-      }),
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: p.argumento || '', font: 'Arial', size: 18 })] })]
-      }),
+      new TableCell({ borders, width: { size: colWidths[0], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: p.ref || '', font: 'Arial', size: 18, bold: true })] })] }),
+      new TableCell({ borders, width: { size: colWidths[1], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: p.nombre || '', font: 'Arial', size: 18 })] })] }),
+      new TableCell({ borders, width: { size: colWidths[2], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: `${p.precio_neto}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
+      new TableCell({ borders, width: { size: colWidths[3], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: `${p.pvp}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
+      new TableCell({ borders, width: { size: colWidths[4], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: `${p.margen_pct}%`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
+      new TableCell({ borders, width: { size: colWidths[5], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: p.argumento || '', font: 'Arial', size: 18 })] })] }),
     ]
   }));
 
   return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
+    width: { size: totalWidth, type: WidthType.DXA },
+    columnWidths: colWidths,
     rows: [filaHeader, ...filas]
   });
 }
 
 function tablaCompetencia(competencia) {
+  const colWidths = [1400, 2000, 1000, 1400, 2560];
+  const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
+  const borders = { top: border, bottom: border, left: border, right: border };
+
   const filaHeader = new TableRow({
     children: [
-      celdaHeader('Marca'),
-      celdaHeader('Producto'),
-      celdaHeader('PVP EUR'),
-      celdaHeader('Precio compra est.'),
-      celdaHeader('Observaciones'),
+      celdaHeader('Marca', colWidths[0]),
+      celdaHeader('Producto', colWidths[1]),
+      celdaHeader('PVP EUR', colWidths[2]),
+      celdaHeader('Precio compra est.', colWidths[3]),
+      celdaHeader('Observaciones', colWidths[4]),
     ]
   });
 
   const filas = competencia.map((c, i) => new TableRow({
     children: [
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: c.marca || '', font: 'Arial', size: 18, bold: true })] })]
-      }),
-      celdaTexto(c.producto),
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: `${c.precio_pvp}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })]
-      }),
-      new TableCell({
-        shading: i % 2 === 0 ? { fill: GRIS_CLARO } : {},
-        children: [new Paragraph({ children: [new TextRun({ text: `${c.precio_compra_est}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })]
-      }),
-      celdaTexto(c.obs),
+      new TableCell({ borders, width: { size: colWidths[0], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: c.marca || '', font: 'Arial', size: 18, bold: true })] })] }),
+      new TableCell({ borders, width: { size: colWidths[1], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: c.producto || '', font: 'Arial', size: 18 })] })] }),
+      new TableCell({ borders, width: { size: colWidths[2], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: `${c.precio_pvp}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
+      new TableCell({ borders, width: { size: colWidths[3], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: `${c.precio_compra_est}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
+      new TableCell({ borders, width: { size: colWidths[4], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        children: [new Paragraph({ children: [new TextRun({ text: c.obs || '', font: 'Arial', size: 18 })] })] }),
     ]
   }));
 
   return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
+    width: { size: totalWidth, type: WidthType.DXA },
+    columnWidths: colWidths,
     rows: [filaHeader, ...filas]
   });
 }
@@ -185,7 +176,6 @@ async function createDocx(datos, tipoInforme) {
     }));
   } catch (e) {
     console.warn('Logo no encontrado, se omite:', e.message);
-    // Si no hay logo, ponemos el texto como fallback
     children.push(new Paragraph({
       spacing: { before: 0, after: 60 },
       children: [new TextRun({
