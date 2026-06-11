@@ -198,7 +198,7 @@ Usa los archivos del comercial para ser específico en precios y referencias.`
   }
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-4-5',
     max_tokens: 2048,
     system: getSystemPrompt(tipoInforme),
     messages: [{ role: 'user', content }]
