@@ -99,7 +99,7 @@ async function prepareArchivos(comercialId) {
           }
         });
 
-      } else if (['xlsx', 'xls'].includes(ext)) {
+      } else if (false && ['xlsx', 'xls'].includes(ext)) {
         // Omitir BBDDclientes — se procesa por separado
         if (archivo.name.toLowerCase().includes('bbddclientes')) {
           console.log(`Omitiendo BBDD clientes de archivos: ${archivo.name}`);
