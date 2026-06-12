@@ -200,8 +200,11 @@ Genera el informe JSON completo según la estructura del system prompt.`
   });
 
   const texto_respuesta = response.content[0].text;
-  const json_limpio = texto_respuesta.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  return JSON.parse(json_limpio);
+  const inicio = texto_respuesta.indexOf('{');
+const fin = texto_respuesta.lastIndexOf('}');
+if (inicio === -1 || fin === -1) throw new Error('No se encontró JSON en la respuesta');
+const json_limpio = texto_respuesta.substring(inicio, fin + 1);
+return JSON.parse(json_limpio);
 }
 
 module.exports = { generateReport };
