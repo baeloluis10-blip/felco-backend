@@ -49,14 +49,15 @@ async function buscarClienteEnBBDD(comercialId, nombreCliente) {
     if (!fila) return null;
 
     return {
-      nombre:     fila['Customer Name'] || fila['Name'] || '',
-      localidad:  fila['Destination'] || '',
-      cp:         fila['Postal Code'] || '',
-      telefono:   fila['Tel.'] || '',
-      email:      fila['E-Mail'] || '',
-      customerNo: fila['Customer No.'] || '',
-      comercial:  fila['Sales Rep.'] || '',
-      tipo:       fila['Duty'] || '',
+      nombre:         fila['Customer Name'] || '',
+      contactoNombre: fila['Name'] || '',
+      localidad:      fila['Destination'] || '',
+      cp:             fila['Postal Code'] || '',
+      telefono:       fila['Tel.'] || '',
+      email:          fila['E-Mail'] || fila['Customer Mail - Backoffice'] || '',
+      customerNo:     fila['Customer No.'] || '',
+      comercial:      fila['Sales Rep.'] || '',
+      tipo:           fila['Duty'] || '',
     };
   } catch (e) {
     console.warn('Error buscando cliente en BBDD:', e.message);
@@ -77,13 +78,11 @@ async function prepareArchivos(comercialId) {
       const ext = archivo.name.split('.').pop().toLowerCase();
       const tamanio = archivo.metadata?.size || 0;
 
-      // Omitir archivos grandes ANTES de descargar para no saturar memoria
       if (ext === 'pdf' && tamanio > 5000000) {
         console.warn(`PDF demasiado grande omitido sin descargar: ${archivo.name} (${tamanio} bytes)`);
         continue;
       }
 
-      // Omitir BBDDclientes — se procesa por separado
       if (['xlsx', 'xls'].includes(ext) && archivo.name.toLowerCase().includes('bbddclientes')) {
         continue;
       }
@@ -153,17 +152,21 @@ async function generateReport({ texto, fotos, tipoInforme, comercialId }) {
       content.push({
         type: 'text',
         text: `DATOS OFICIALES DEL CLIENTE (extraídos de BBDDclientes):
-Nombre: ${datosClienteBBDD.nombre}
-Tipo: ${datosClienteBBDD.tipo}
-Localidad: ${datosClienteBBDD.localidad}
-CP: ${datosClienteBBDD.cp}
+Nº Cliente: ${datosClienteBBDD.customerNo}
+Empresa: ${datosClienteBBDD.nombre}
+Persona de contacto: ${datosClienteBBDD.contactoNombre}
 Teléfono: ${datosClienteBBDD.telefono}
 Email: ${datosClienteBBDD.email}
-Nº Cliente: ${datosClienteBBDD.customerNo}
+Localidad: ${datosClienteBBDD.localidad}
+CP: ${datosClienteBBDD.cp}
 Comercial: ${datosClienteBBDD.comercial}
-Contacto: ${datosClienteBBDD.telefono}
+Tipo: ${datosClienteBBDD.tipo}
 
-Usa estos datos para rellenar el campo "cliente" del JSON. El campo "contacto" debe contener el teléfono.`
+Rellena el campo "cliente" del JSON así:
+- nombre: usar Empresa
+- tipo: usar Tipo
+- localidad: usar Localidad
+- contacto: usar "Persona de contacto — Teléfono"`
       });
     }
   }
