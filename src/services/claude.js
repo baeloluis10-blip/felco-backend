@@ -74,12 +74,25 @@ async function prepareArchivos(comercialId) {
     for (const archivo of archivos.slice(0, 10)) {
       if (totalChars >= MAX_CHARS) break;
 
-      const buffer = await downloadFile(comercialId, archivo.name);
       const ext = archivo.name.split('.').pop().toLowerCase();
+      const tamanio = archivo.metadata?.size || 0;
+
+      // Omitir archivos grandes ANTES de descargar para no saturar memoria
+      if (ext === 'pdf' && tamanio > 5000000) {
+        console.warn(`PDF demasiado grande omitido sin descargar: ${archivo.name} (${tamanio} bytes)`);
+        continue;
+      }
+
+      // Omitir BBDDclientes — se procesa por separado
+      if (['xlsx', 'xls'].includes(ext) && archivo.name.toLowerCase().includes('bbddclientes')) {
+        continue;
+      }
+
+      const buffer = await downloadFile(comercialId, archivo.name);
 
       if (ext === 'pdf') {
-        if (buffer.length < 500 || buffer.length > 5000000) {
-          console.warn(`PDF omitido (vacío o demasiado grande): ${archivo.name} (${buffer.length} bytes)`);
+        if (buffer.length < 500) {
+          console.warn(`PDF vacío omitido: ${archivo.name} (${buffer.length} bytes)`);
           continue;
         }
         const base64 = buffer.toString('base64');
@@ -99,11 +112,7 @@ async function prepareArchivos(comercialId) {
           }
         });
 
-      } else if (false && ['xlsx', 'xls'].includes(ext)) {
-        if (archivo.name.toLowerCase().includes('bbddclientes')) {
-          console.log(`Omitiendo BBDD clientes de archivos: ${archivo.name}`);
-          continue;
-        }
+      } else if (['xlsx', 'xls'].includes(ext)) {
         const texto = await xlsxToText(buffer, archivo.name);
         if (texto) {
           const truncado = texto.substring(0, Math.min(3000, MAX_CHARS - totalChars));
@@ -201,10 +210,10 @@ Genera el informe JSON completo según la estructura del system prompt.`
 
   const texto_respuesta = response.content[0].text;
   const inicio = texto_respuesta.indexOf('{');
-const fin = texto_respuesta.lastIndexOf('}');
-if (inicio === -1 || fin === -1) throw new Error('No se encontró JSON en la respuesta');
-const json_limpio = texto_respuesta.substring(inicio, fin + 1);
-return JSON.parse(json_limpio);
+  const fin = texto_respuesta.lastIndexOf('}');
+  if (inicio === -1 || fin === -1) throw new Error('No se encontró JSON en la respuesta');
+  const json_limpio = texto_respuesta.substring(inicio, fin + 1);
+  return JSON.parse(json_limpio);
 }
 
 module.exports = { generateReport };
