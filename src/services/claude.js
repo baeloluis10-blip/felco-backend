@@ -161,8 +161,9 @@ Teléfono: ${datosClienteBBDD.telefono}
 Email: ${datosClienteBBDD.email}
 Nº Cliente: ${datosClienteBBDD.customerNo}
 Comercial: ${datosClienteBBDD.comercial}
+Contacto: ${datosClienteBBDD.telefono}
 
-Usa estos datos para rellenar el campo "cliente" del JSON con la máxima precisión.`
+Usa estos datos para rellenar el campo "cliente" del JSON. El campo "contacto" debe contener el teléfono.`
       });
     }
   }
