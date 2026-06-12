@@ -45,7 +45,27 @@ CAMPAÑA JUNIO 2026 (límite 30/6/2026):
 FELCO: 5% desde 700 EUR / 7% desde 2.000 EUR (excluye eléctricas)
 ALPEN: 5% hasta 2.000 EUR / 7% hasta 3.500 EUR / 10% más de 3.500 EUR
 Expositor gratis: vitrina >= 700 EUR / torre suelo >= 2.000 EUR
-SUBIDA +6% el 1/7/2026 (excepto FELCO 2e y FELCO 834)`;
+SUBIDA +6% el 1/7/2026 (excepto FELCO 2e y FELCO 834)
+
+ARGUMENTARIO TÉCNICO-COMERCIAL — LA CALIDAD DE LA HERRAMIENTA IMPACTA DIRECTAMENTE EN LA RENTABILIDAD DEL CULTIVO:
+
+PARA EL PODADOR:
+- Un corte limpio y preciso (bypass de acero suizo) cicatriza más rápido y minimiza el riesgo de plagas y enfermedades. Un corte aplastado o irregular (herramienta barata o desafilada) deja herida abierta que invita a infecciones fúngicas y bacterianas.
+- La ergonomía no es un lujo: fatiga acumulada en muñeca y mano = menos cortes por hora, más errores, riesgo de lesión. El FELCO 7 rotativo reduce un 20% el esfuerzo repetitivo. Un podador profesional hace entre 800-2.000 cortes/día.
+- Tijera bien mantenida = mismo rendimiento durante años. Tijera barata = rendimiento degradado desde el primer mes. El sistema de recambios FELCO es único: se puede sustituir hoja, muelle, tornillo y empuñadura por separado → coste total de propiedad (TCO) inferior a cualquier competidor.
+- La velocidad de corte importa: en viña o frutal, un ciclo de 0,4 segundos (FELCO eléctrica) vs 1,5 segundos manual multiplica la productividad por 3-4 en jornadas largas.
+
+PARA EL DISTRIBUIDOR:
+- Vender herramienta de calidad = menos devoluciones, menos reclamaciones, más confianza del agricultor → fidelización y venta recurrente de recambios (márgenes superiores al 40%).
+- El agricultor profesional no compra por precio: compra por fiabilidad. Un FELCO 2 bien argumentado se vende a 73 EUR PVP frente a Bellota a 35 EUR porque el agricultor sabe que durará 10+ años vs 2-3 años de la alternativa.
+- Recambios FELCO como modelo de negocio recurrente: muelle, hoja, contrahoja → el distribuidor que expone recambios genera venta adicional sin esfuerzo comercial.
+- La subida de precios del 1/7/2026 es un argumento de cierre real: stock ahora = ahorro garantizado del 6% sobre pedido futuro.
+
+ARGUMENTO CLAVE vs BELLOTA/ALTUNA:
+"Con Bellota o Altuna compras precio. Con FELCO compras rendimiento durante 10 años. El coste por corte de un FELCO 2 a lo largo de su vida útil es inferior al de cualquier tijera de 25-35 EUR que se cambia cada 2-3 temporadas. Además, el corte limpio suizo protege la planta: menos enfermedades = menos fitosanitarios = ahorro real para el agricultor."
+
+ARGUMENTO CLAVE vs BAHCO:
+"FELCO y Bahco juegan en la misma liga de precio, pero FELCO tiene dos ventajas decisivas: sistema de recambios más completo y reconocido mundialmente, y gama eléctrica ALPEN con mayor autonomía (12h) y mejor precio/prestación en el segmento profesional agrícola."`;
 
   const estructuras = {
     producto: `

@@ -112,7 +112,7 @@ async function prepareArchivos(comercialId) {
           }
         });
 
-      } else if (['xlsx', 'xls'].includes(ext)) {
+      } else if (false && ['xlsx', 'xls'].includes(ext)) {
         const texto = await xlsxToText(buffer, archivo.name);
         if (texto) {
           const truncado = texto.substring(0, Math.min(3000, MAX_CHARS - totalChars));
