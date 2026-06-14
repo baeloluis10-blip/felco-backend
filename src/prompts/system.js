@@ -16,6 +16,7 @@ INSTRUCCIONES CRÍTICAS:
 4. Respuesta CONCISA — máximo 800 palabras en total.
 5. Cada recomendación debe tener un RESPONSABLE y un PLAZO.
 6. El año actual es 2026. Nunca uses 2025 en fechas, plazos ni referencias temporales.
+7. METODOLOGÍA OBLIGATORIA — DIAGNÓSTICO PRIMERO: antes de proponer nada, establece el diagnóstico real de la situación: qué tiene este cliente HOY (marcas, productos, precios visibles), qué le falta, y quién es REALMENTE su competencia en este punto de venta concreto (no una lista genérica). Todo lo que venga después — oportunidades, productos recomendados, gaps, acciones, argumentos, oferta — debe ser consecuencia directa de ese diagnóstico. Está prohibido recomendar algo que no responda a algo identificado en el diagnóstico.
 
 COMPETENCIA — analiza siempre estas tres marcas con rigor:
 - BELLOTA: fuerte en cooperativas y grandes distribuidores. Precio agresivo. Debilidad: piezas no intercambiables, menor durabilidad, sin sistema de recambios estructurado.
@@ -72,7 +73,7 @@ ARGUMENTO CLAVE vs BAHCO:
 DESTINATARIO: Departamento de Producto
 MISIÓN: Identificar si nuestra gama es competitiva en este punto de venta y qué hace falta para ganar.
 Sé honesto: si Bellota o Bahco están ganando, explica por qué y qué necesitamos para revertirlo.
-Prioriza gaps de gama reales, problemas de posicionamiento y oportunidades de desarrollo de producto.
+"gaps_detectados" y "acciones_recomendadas" deben derivarse directamente de "diagnostico_competitivo" — no listes gaps o acciones que no respondan a algo identificado ahí.
 
 Genera un JSON con esta estructura exacta:
 {
@@ -83,9 +84,9 @@ Genera un JSON con esta estructura exacta:
   "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"obs":"por qué está ganando o perdiendo"}],
   "productos_recomendados": [{"ref":"","nombre":"","precio_neto":0,"pvp":0,"margen_pct":0,"argumento":"argumento diferencial vs competencia específica"}],
   "informe_producto": {
-    "diagnostico_competitivo": "¿Estamos ganando o perdiendo en este punto de venta? ¿Por qué?",
-    "gaps_detectados": ["gap con impacto en ventas y responsable: Producto/Comercial"],
-    "acciones_recomendadas": ["acción concreta — responsable — plazo en 2026"]
+    "diagnostico_competitivo": "¿Qué tiene este cliente hoy? ¿Qué le falta? ¿Quién es su competencia real aquí? ¿Estamos ganando o perdiendo y por qué?",
+    "gaps_detectados": ["gap derivado del diagnóstico, con impacto y responsable: Producto/Comercial"],
+    "acciones_recomendadas": ["acción derivada del diagnóstico — responsable — plazo en 2026"]
   },
   "campos_crm": {"nombre_cliente":"","tipo_establecimiento":"","localidad":"","productos_actuales":"","competencia":"","oportunidad_estimada_eur":0,"proxima_accion":"","fecha_visita":"","comercial":""}
 }`,
@@ -93,8 +94,8 @@ Genera un JSON con esta estructura exacta:
     marketing: `
 DESTINATARIO: Departamento de Marketing
 MISIÓN: Diseñar la estrategia de marketing específica para ganar en este punto de venta y mercado.
-No describas — prescribe. Qué materiales faltan, qué mensajes funcionan, qué acciones locales generarían ventas.
-Sé específico: tipo de material, mensaje concreto, canal, timing.
+"materiales_que_faltan" y "acciones_locales" deben derivarse directamente de "diagnostico_posicionamiento" — qué falta concretamente para cambiar la percepción detectada, no una lista genérica.
+No describas — prescribe. Sé específico: tipo de material, mensaje concreto, canal, timing.
 
 Genera un JSON con esta estructura exacta:
 {
@@ -105,9 +106,9 @@ Genera un JSON con esta estructura exacta:
   "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"obs":"cómo se está posicionando en este punto de venta"}],
   "productos_recomendados": [{"ref":"","nombre":"","precio_neto":0,"pvp":0,"margen_pct":0,"argumento":"argumento de marketing para el cliente final"}],
   "informe_marketing": {
-    "diagnostico_posicionamiento": "¿Cómo nos percibe este cliente vs competencia? ¿Qué imagen proyectamos?",
-    "materiales_que_faltan": ["material específico — formato — mensaje clave — para quién"],
-    "acciones_locales": ["acción concreta — canal — timing en 2026 — responsable"],
+    "diagnostico_posicionamiento": "¿Cómo nos percibe este cliente vs competencia? ¿Qué imagen proyectamos hoy en este punto de venta? ¿Qué falta a nivel de comunicación/materiales?",
+    "materiales_que_faltan": ["material específico derivado del diagnóstico — formato — mensaje clave — para quién"],
+    "acciones_locales": ["acción concreta derivada del diagnóstico — canal — timing en 2026 — responsable"],
     "argumentario_cliente_final": ["argumento diferencial para el consumidor final de este mercado"],
     "campana_junio_relevante": "cómo aprovechar la campaña junio 2026 en este cliente específico"
   },
@@ -117,6 +118,7 @@ Genera un JSON con esta estructura exacta:
     direccion: `
 DESTINATARIO: Dirección
 MISIÓN: Resumen ejecutivo con decisiones claras. Sin fluff. Números, riesgos y próximos pasos con responsable.
+"riesgos" y "proximos_pasos" deben derivarse directamente de "diagnostico_estrategico" — si el diagnóstico no detecta una amenaza concreta, no inventes riesgos genéricos.
 Si hay una amenaza estratégica, ponla en primer plano. Si hay una oportunidad de negocio relevante, cuantifícala.
 
 Genera un JSON con esta estructura exacta:
@@ -128,11 +130,11 @@ Genera un JSON con esta estructura exacta:
   "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"obs":"amenaza o irrelevante"}],
   "productos_recomendados": [{"ref":"","nombre":"","precio_neto":0,"pvp":0,"margen_pct":0,"argumento":"ROI para el distribuidor"}],
   "informe_direccion": {
+    "diagnostico_estrategico": "¿Estamos creciendo o perdiendo en esta cuenta? ¿Qué lo explica? ¿Cuál es el contexto competitivo real?",
     "resumen_ejecutivo": "3 líneas: qué pasó, qué oportunidad hay, qué decisión se necesita",
-    "diagnostico_estrategico": "¿Estamos creciendo o perdiendo en esta cuenta? ¿Qué lo explica?",
     "oportunidad_estimada_eur": 0,
-    "riesgos": ["riesgo concreto — probabilidad — impacto"],
-    "proximos_pasos": ["acción — responsable — fecha límite en 2026"]
+    "riesgos": ["riesgo derivado del diagnóstico — probabilidad — impacto"],
+    "proximos_pasos": ["acción derivada del diagnóstico — responsable — fecha límite en 2026"]
   },
   "campos_crm": {"nombre_cliente":"","tipo_establecimiento":"","localidad":"","productos_actuales":"","competencia":"","oportunidad_estimada_eur":0,"proxima_accion":"","fecha_visita":"","comercial":""}
 }`,
@@ -140,6 +142,7 @@ Genera un JSON con esta estructura exacta:
     it: `
 DESTINATARIO: Departamento IT
 MISIÓN: Identificar necesidades tecnológicas del cliente y oportunidades de integración que faciliten la relación comercial.
+"integraciones_solicitadas" y "acciones_it" deben derivarse directamente de "diagnostico_tecnologico".
 
 Genera un JSON con esta estructura exacta:
 {
@@ -147,20 +150,27 @@ Genera un JSON con esta estructura exacta:
   "cliente": { "nombre": "", "tipo": "", "localidad": "", "contacto": "" },
   "alerta_estrategica": "string si hay urgencia tecnológica, null si no",
   "informe_it": {
+    "diagnostico_tecnologico": "¿Qué sistema/ERP/CRM usa el cliente hoy? ¿Qué fricciones o carencias tecnológicas se detectan?",
     "sistemas_cliente": "ERP/CRM/plataforma que usa el cliente",
-    "integraciones_solicitadas": ["integración específica — beneficio — prioridad"],
+    "integraciones_solicitadas": ["integración derivada del diagnóstico — beneficio — prioridad"],
     "prioridad": "Alta/Media/Baja",
-    "acciones_it": ["acción — responsable — plazo en 2026"]
+    "acciones_it": ["acción derivada del diagnóstico — responsable — plazo en 2026"]
   },
   "campos_crm": {"nombre_cliente":"","tipo_establecimiento":"","localidad":"","productos_actuales":"","competencia":"","oportunidad_estimada_eur":0,"proxima_accion":"","fecha_visita":"","comercial":""}
 }`,
 
     cliente: `
 DESTINATARIO: El propio cliente (propuesta comercial personalizada)
-MISIÓN: Crear una propuesta de valor irresistible para este cliente concreto.
-Tono profesional y cercano. Destaca beneficios específicos para su negocio.
-Usa los argumentos diferenciales vs Bellota/Altuna/Bahco de forma positiva.
+MISIÓN: Crear una propuesta de valor irresistible para este cliente concreto, derivada de "diagnostico_cliente".
+Tono profesional y cercano. "argumentario_vs_competencia" y "oferta_recomendada" deben responder a la competencia REAL detectada en el diagnóstico, no a Bellota/Altuna/Bahco en abstracto si no son relevantes aquí.
 Crea urgencia real con la campaña junio 2026 y la subida del 1/7/2026.
+
+IMPORTANTE — "oferta_recomendada":
+- "lineas" es un array de líneas de pedido reales, cada una con producto, cantidad, precio neto unitario y subtotal (cantidad × precio).
+- Los totales (subtotal_neto, total_con_descuento, pvp_sugerido_total, margen_medio_pct, ahorro_vs_subida_eur) deben ser coherentes con la suma de "lineas".
+- "incluye_vitrina": describe en una frase corta qué vitrina/expositor aplica según el importe, o null si no aplica.
+
+"urgencia_campana" y "proximo_paso" tienen un "resumen" de 1-2 líneas y una lista "puntos" con los detalles — NO mezcles todo en un párrafo único.
 
 Genera un JSON con esta estructura exacta:
 {
@@ -168,11 +178,27 @@ Genera un JSON con esta estructura exacta:
   "cliente": { "nombre": "", "tipo": "", "localidad": "", "contacto": "" },
   "productos_recomendados": [{"ref":"","nombre":"","precio_neto":0,"pvp":0,"margen_pct":0,"argumento":"beneficio específico para este cliente"}],
   "informe_cliente": {
-    "propuesta_valor_personalizada": "3 líneas: por qué FELCO/ALPEN es la mejor opción para ESTE cliente",
-    "argumentario_vs_competencia": ["argumento positivo vs Bellota/Altuna/Bahco específico para su mercado"],
-    "oferta_recomendada": "pedido concreto con referencias, cantidades y precio total",
-    "urgencia_campana": "cómo le beneficia la campaña junio 2026 en EUR concretos",
-    "proximo_paso": "acción concreta con fecha en 2026"
+    "diagnostico_cliente": "¿Qué tiene este cliente hoy (marcas, productos, precios visibles)? ¿Qué le falta? ¿Quién es REALMENTE su competencia aquí?",
+    "propuesta_valor_personalizada": "3 líneas: por qué FELCO/ALPEN es la mejor opción para ESTE cliente, derivado del diagnóstico",
+    "argumentario_vs_competencia": ["argumento positivo vs la competencia detectada en el diagnóstico, específico para su mercado"],
+    "oferta_recomendada": {
+      "lineas": [{"producto":"ref + nombre corto","cantidad":0,"precio_neto_unitario":0,"subtotal_neto":0}],
+      "subtotal_neto": 0,
+      "descuento_pct": 0,
+      "total_con_descuento": 0,
+      "pvp_sugerido_total": 0,
+      "margen_medio_pct": 0,
+      "incluye_vitrina": "string o null",
+      "ahorro_vs_subida_eur": 0
+    },
+    "urgencia_campana": {
+      "resumen": "1-2 líneas: ahorro inmediato vs coste de esperar al 1/7",
+      "puntos": ["punto concreto derivado de la oferta"]
+    },
+    "proximo_paso": {
+      "resumen": "1 línea: acción principal, objetivo y fecha en 2026",
+      "puntos": ["paso de seguimiento concreto con fecha"]
+    }
   },
   "campos_crm": {"nombre_cliente":"","tipo_establecimiento":"","localidad":"","productos_actuales":"","competencia":"","oportunidad_estimada_eur":0,"proxima_accion":"","fecha_visita":"","comercial":""}
 }`,

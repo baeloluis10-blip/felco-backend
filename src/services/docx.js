@@ -10,8 +10,14 @@ const ROJO        = 'E30613';
 const GRIS_OSCURO = '3D4F52';
 const GRIS_CLARO  = 'F5F5F5';
 const NEGRO       = '222222';
+const AZUL_DIAG   = 'E3EBF2';
 
 const LOGO_PATH = path.join(__dirname, '../../assets/logo-felco.jpg');
+
+function fmtEUR(valor) {
+  const num = Number(valor) || 0;
+  return num.toFixed(2).replace('.', ',') + ' EUR';
+}
 
 function parrafoTitulo(texto) {
   return new Paragraph({
@@ -55,6 +61,53 @@ function lineaDivisoria() {
   });
 }
 
+// ── BLOQUE DE DIAGNÓSTICO (resaltado, antes de cada sección de recomendaciones) ──
+function bloqueDiagnostico(texto) {
+  if (!texto) return [];
+  return [new Paragraph({
+    spacing: { before: 100, after: 150 },
+    shading: { fill: AZUL_DIAG, type: ShadingType.CLEAR },
+    children: [
+      new TextRun({ text: 'DIAGNÓSTICO: ', font: 'Arial', size: 19, bold: true, color: GRIS_OSCURO }),
+      new TextRun({ text: texto, font: 'Arial', size: 19, color: NEGRO }),
+    ]
+  })];
+}
+
+// ── BLOQUE RESUMEN + PUNTOS (Campaña activa / Próximo paso) ──
+function bloqueResumenPuntos(titulo, bloque) {
+  const out = [];
+  if (!bloque) return out;
+  out.push(parrafoSubtitulo(titulo));
+  if (bloque.resumen) out.push(parrafoTexto(bloque.resumen));
+  (bloque.puntos || []).forEach(p => out.push(parrafoBullet(p)));
+  return out;
+}
+
+// ── RESUMEN DE TOTALES DE LA OFERTA ──
+function bloqueResumenOferta(oferta) {
+  const out = [];
+  const filas = [];
+  if (oferta.subtotal_neto)        filas.push(['Subtotal neto', fmtEUR(oferta.subtotal_neto)]);
+  if (oferta.descuento_pct)        filas.push(['Descuento campaña', `${oferta.descuento_pct}%`]);
+  if (oferta.total_con_descuento)  filas.push(['Total con descuento', fmtEUR(oferta.total_con_descuento)]);
+  if (oferta.pvp_sugerido_total)   filas.push(['PVP sugerido total', fmtEUR(oferta.pvp_sugerido_total)]);
+  if (oferta.margen_medio_pct)     filas.push(['Margen medio', `${oferta.margen_medio_pct}%`]);
+  if (oferta.incluye_vitrina)      filas.push(['Vitrina incluida', oferta.incluye_vitrina]);
+  if (oferta.ahorro_vs_subida_eur) filas.push(['Ahorro vs subida 1/7', fmtEUR(oferta.ahorro_vs_subida_eur)]);
+
+  filas.forEach(([label, valor]) => {
+    out.push(new Paragraph({
+      spacing: { before: 30, after: 30 },
+      children: [
+        new TextRun({ text: `${label}: `, font: 'Arial', size: 19, bold: true, color: GRIS_OSCURO }),
+        new TextRun({ text: valor, font: 'Arial', size: 19, color: NEGRO }),
+      ]
+    }));
+  });
+  return out;
+}
+
 function celdaHeader(texto, ancho) {
   const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
   const borders = { top: border, bottom: border, left: border, right: border };
@@ -72,11 +125,24 @@ function celdaHeader(texto, ancho) {
   });
 }
 
+function celdaCuerpo(texto, ancho, i, alineacion = AlignmentType.LEFT, bold = false) {
+  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
+  const borders = { top: border, bottom: border, left: border, right: border };
+  return new TableCell({
+    borders,
+    width: { size: ancho, type: WidthType.DXA },
+    shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {},
+    margins: { top: 80, bottom: 80, left: 120, right: 120 },
+    children: [new Paragraph({
+      alignment: alineacion,
+      children: [new TextRun({ text: String(texto ?? ''), font: 'Arial', size: 18, bold })]
+    })]
+  });
+}
+
 function tablaProductos(productos) {
   const colWidths = [1200, 2000, 900, 900, 800, 2560];
   const totalWidth = colWidths.reduce((a, b) => a + b, 0);
-  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
-  const borders = { top: border, bottom: border, left: border, right: border };
 
   const filaHeader = new TableRow({
     children: [
@@ -91,18 +157,12 @@ function tablaProductos(productos) {
 
   const filas = productos.map((p, i) => new TableRow({
     children: [
-      new TableCell({ borders, width: { size: colWidths[0], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: p.ref || '', font: 'Arial', size: 18, bold: true })] })] }),
-      new TableCell({ borders, width: { size: colWidths[1], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: p.nombre || '', font: 'Arial', size: 18 })] })] }),
-      new TableCell({ borders, width: { size: colWidths[2], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: `${p.precio_neto}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
-      new TableCell({ borders, width: { size: colWidths[3], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: `${p.pvp}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
-      new TableCell({ borders, width: { size: colWidths[4], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: `${p.margen_pct}%`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
-      new TableCell({ borders, width: { size: colWidths[5], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: p.argumento || '', font: 'Arial', size: 18 })] })] }),
+      celdaCuerpo(p.ref, colWidths[0], i, AlignmentType.LEFT, true),
+      celdaCuerpo(p.nombre, colWidths[1], i),
+      celdaCuerpo(`${p.precio_neto}`, colWidths[2], i, AlignmentType.RIGHT),
+      celdaCuerpo(`${p.pvp}`, colWidths[3], i, AlignmentType.RIGHT),
+      celdaCuerpo(`${p.margen_pct}%`, colWidths[4], i, AlignmentType.RIGHT),
+      celdaCuerpo(p.argumento, colWidths[5], i),
     ]
   }));
 
@@ -116,8 +176,6 @@ function tablaProductos(productos) {
 function tablaCompetencia(competencia) {
   const colWidths = [1400, 2000, 1000, 1400, 2560];
   const totalWidth = colWidths.reduce((a, b) => a + b, 0);
-  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
-  const borders = { top: border, bottom: border, left: border, right: border };
 
   const filaHeader = new TableRow({
     children: [
@@ -131,16 +189,42 @@ function tablaCompetencia(competencia) {
 
   const filas = competencia.map((c, i) => new TableRow({
     children: [
-      new TableCell({ borders, width: { size: colWidths[0], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: c.marca || '', font: 'Arial', size: 18, bold: true })] })] }),
-      new TableCell({ borders, width: { size: colWidths[1], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: c.producto || '', font: 'Arial', size: 18 })] })] }),
-      new TableCell({ borders, width: { size: colWidths[2], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: `${c.precio_pvp}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
-      new TableCell({ borders, width: { size: colWidths[3], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: `${c.precio_compra_est}`, font: 'Arial', size: 18 })], alignment: AlignmentType.RIGHT })] }),
-      new TableCell({ borders, width: { size: colWidths[4], type: WidthType.DXA }, shading: i % 2 === 0 ? { fill: GRIS_CLARO, type: ShadingType.CLEAR } : {}, margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: c.obs || '', font: 'Arial', size: 18 })] })] }),
+      celdaCuerpo(c.marca, colWidths[0], i, AlignmentType.LEFT, true),
+      celdaCuerpo(c.producto, colWidths[1], i),
+      celdaCuerpo(`${c.precio_pvp}`, colWidths[2], i, AlignmentType.RIGHT),
+      celdaCuerpo(`${c.precio_compra_est}`, colWidths[3], i, AlignmentType.RIGHT),
+      celdaCuerpo(c.obs, colWidths[4], i),
+    ]
+  }));
+
+  return new Table({
+    width: { size: totalWidth, type: WidthType.DXA },
+    columnWidths: colWidths,
+    rows: [filaHeader, ...filas]
+  });
+}
+
+// ── TABLA DE OFERTA (informe Cliente) ──
+function tablaOferta(oferta) {
+  if (!oferta?.lineas?.length) return null;
+  const colWidths = [3800, 900, 1830, 1830];
+  const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+
+  const filaHeader = new TableRow({
+    children: [
+      celdaHeader('Producto', colWidths[0]),
+      celdaHeader('Uds', colWidths[1]),
+      celdaHeader('Precio neto', colWidths[2]),
+      celdaHeader('Subtotal neto', colWidths[3]),
+    ]
+  });
+
+  const filas = oferta.lineas.map((l, i) => new TableRow({
+    children: [
+      celdaCuerpo(l.producto, colWidths[0], i, AlignmentType.LEFT, true),
+      celdaCuerpo(`${l.cantidad ?? ''}`, colWidths[1], i, AlignmentType.RIGHT),
+      celdaCuerpo(fmtEUR(l.precio_neto_unitario), colWidths[2], i, AlignmentType.RIGHT),
+      celdaCuerpo(fmtEUR(l.subtotal_neto), colWidths[3], i, AlignmentType.RIGHT, true),
     ]
   }));
 
@@ -220,10 +304,12 @@ async function createDocx(datos, tipoInforme) {
     }));
   }
 
-  // ── OPORTUNIDADES ─────────────────────────────────────────────
-  children.push(lineaDivisoria());
-  children.push(parrafoTitulo('Oportunidades detectadas'));
-  (datos.oportunidades || []).forEach(op => children.push(parrafoBullet(op)));
+  // ── OPORTUNIDADES (solo si hay datos) ─────────────────────────
+  if (datos.oportunidades?.length > 0) {
+    children.push(lineaDivisoria());
+    children.push(parrafoTitulo('Oportunidades detectadas'));
+    datos.oportunidades.forEach(op => children.push(parrafoBullet(op)));
+  }
 
   // ── COMPETENCIA ───────────────────────────────────────────────
   if (datos.competencia_detectada?.length > 0) {
@@ -243,6 +329,7 @@ async function createDocx(datos, tipoInforme) {
   if (tipoInforme === 'producto' && datos.informe_producto) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Análisis de producto'));
+    bloqueDiagnostico(datos.informe_producto.diagnostico_competitivo).forEach(p => children.push(p));
     if (datos.informe_producto.gaps_detectados?.length > 0) {
       children.push(parrafoSubtitulo('Gaps detectados'));
       datos.informe_producto.gaps_detectados.forEach(g => children.push(parrafoBullet(g)));
@@ -257,24 +344,38 @@ async function createDocx(datos, tipoInforme) {
   if (tipoInforme === 'marketing' && datos.informe_marketing) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Informe Marketing'));
-    children.push(parrafoSubtitulo('Propuesta de valor'));
-    children.push(parrafoTexto(datos.informe_marketing.propuesta_valor || ''));
+    bloqueDiagnostico(datos.informe_marketing.diagnostico_posicionamiento).forEach(p => children.push(p));
+    if (datos.informe_marketing.materiales_que_faltan?.length > 0) {
+      children.push(parrafoSubtitulo('Materiales que faltan'));
+      datos.informe_marketing.materiales_que_faltan.forEach(m => children.push(parrafoBullet(m)));
+    }
+    if (datos.informe_marketing.acciones_locales?.length > 0) {
+      children.push(parrafoSubtitulo('Acciones locales'));
+      datos.informe_marketing.acciones_locales.forEach(a => children.push(parrafoBullet(a)));
+    }
     if (datos.informe_marketing.argumentario_cliente_final?.length > 0) {
       children.push(parrafoSubtitulo('Argumentario para cliente final'));
       datos.informe_marketing.argumentario_cliente_final.forEach(a => children.push(parrafoBullet(a)));
     }
-    children.push(parrafoSubtitulo('Campaña junio 2026'));
-    children.push(parrafoTexto(datos.informe_marketing.campana_junio_relevante || ''));
+    if (datos.informe_marketing.campana_junio_relevante) {
+      children.push(parrafoSubtitulo('Campaña junio 2026'));
+      children.push(parrafoTexto(datos.informe_marketing.campana_junio_relevante));
+    }
   }
 
   // ── SECCIÓN DIRECCIÓN ─────────────────────────────────────────
   if (tipoInforme === 'direccion' && datos.informe_direccion) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Informe Dirección'));
+    bloqueDiagnostico(datos.informe_direccion.diagnostico_estrategico).forEach(p => children.push(p));
     children.push(parrafoSubtitulo('Resumen ejecutivo'));
     children.push(parrafoTexto(datos.informe_direccion.resumen_ejecutivo || ''));
     children.push(parrafoSubtitulo('Oportunidad estimada'));
-    children.push(parrafoTexto(`${datos.informe_direccion.oportunidad_estimada_eur || 0} EUR`));
+    children.push(parrafoTexto(fmtEUR(datos.informe_direccion.oportunidad_estimada_eur || 0)));
+    if (datos.informe_direccion.riesgos?.length > 0) {
+      children.push(parrafoSubtitulo('Riesgos'));
+      datos.informe_direccion.riesgos.forEach(r => children.push(parrafoBullet(r)));
+    }
     if (datos.informe_direccion.proximos_pasos?.length > 0) {
       children.push(parrafoSubtitulo('Próximos pasos'));
       datos.informe_direccion.proximos_pasos.forEach(p => children.push(parrafoBullet(p)));
@@ -285,6 +386,7 @@ async function createDocx(datos, tipoInforme) {
   if (tipoInforme === 'it' && datos.informe_it) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Informe IT'));
+    bloqueDiagnostico(datos.informe_it.diagnostico_tecnologico).forEach(p => children.push(p));
     children.push(parrafoSubtitulo('Sistemas del cliente'));
     children.push(parrafoTexto(datos.informe_it.sistemas_cliente || '—'));
     if (datos.informe_it.integraciones_solicitadas?.length > 0) {
@@ -303,18 +405,26 @@ async function createDocx(datos, tipoInforme) {
   if (tipoInforme === 'cliente' && datos.informe_cliente) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Propuesta comercial'));
+    bloqueDiagnostico(datos.informe_cliente.diagnostico_cliente).forEach(p => children.push(p));
+
     children.push(parrafoSubtitulo('Propuesta de valor'));
     children.push(parrafoTexto(datos.informe_cliente.propuesta_valor_personalizada || ''));
+
     if (datos.informe_cliente.argumentario_vs_competencia?.length > 0) {
       children.push(parrafoSubtitulo('Por qué FELCO / ALPEN'));
       datos.informe_cliente.argumentario_vs_competencia.forEach(a => children.push(parrafoBullet(a)));
     }
-    children.push(parrafoSubtitulo('Oferta recomendada'));
-    children.push(parrafoTexto(datos.informe_cliente.oferta_recomendada || ''));
-    children.push(parrafoSubtitulo('Campaña activa'));
-    children.push(parrafoTexto(datos.informe_cliente.urgencia_campana || ''));
-    children.push(parrafoSubtitulo('Próximo paso'));
-    children.push(parrafoTexto(datos.informe_cliente.proximo_paso || ''));
+
+    const oferta = datos.informe_cliente.oferta_recomendada;
+    const tabla = tablaOferta(oferta);
+    if (tabla) {
+      children.push(parrafoSubtitulo('Oferta recomendada'));
+      children.push(tabla);
+      bloqueResumenOferta(oferta).forEach(p => children.push(p));
+    }
+
+    bloqueResumenPuntos('Campaña activa', datos.informe_cliente.urgencia_campana).forEach(p => children.push(p));
+    bloqueResumenPuntos('Próximo paso', datos.informe_cliente.proximo_paso).forEach(p => children.push(p));
   }
 
   // ── PIE DE PÁGINA ─────────────────────────────────────────────
