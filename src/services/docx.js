@@ -20,6 +20,53 @@ function fmtEUR(valor) {
   return num.toFixed(2).replace('.', ',') + ' EUR';
 }
  
+// Recalcula subtotales y totales de la oferta a partir de las líneas
+// (cantidad, precio_neto_unitario, pvp_unitario) en vez de confiar en que
+// la IA haga la aritmética correctamente. "descuento_pct" sí viene de la
+// IA porque depende de las reglas de campaña, no es aritmética pura.
+function recalcularOferta(oferta) {
+  if (!oferta?.lineas?.length) return oferta;
+ 
+  const lineas = oferta.lineas.map(l => {
+    const cantidad = Number(l.cantidad) || 0;
+    const precioNeto = Number(l.precio_neto_unitario) || 0;
+    const pvpUnitario = Number(l.pvp_unitario ?? l.precio_neto_unitario) || 0;
+    return {
+      ...l,
+      cantidad,
+      precio_neto_unitario: precioNeto,
+      pvp_unitario: pvpUnitario,
+      subtotal_neto: +(cantidad * precioNeto).toFixed(2),
+      subtotal_pvp: +(cantidad * pvpUnitario).toFixed(2),
+    };
+  });
+ 
+  const subtotalNeto = +lineas.reduce((s, l) => s + l.subtotal_neto, 0).toFixed(2);
+  const subtotalPvp   = +lineas.reduce((s, l) => s + l.subtotal_pvp, 0).toFixed(2);
+  const descuentoPct  = Number(oferta.descuento_pct) || 0;
+  const totalConDescuento = +(subtotalNeto * (1 - descuentoPct / 100)).toFixed(2);
+  const margenMedioPct = subtotalPvp > 0
+    ? +(((subtotalPvp - subtotalNeto) / subtotalPvp) * 100).toFixed(1)
+    : 0;
+ 
+  // Aproximación del ahorro por evitar la subida +6% del 1/7/2026
+  // (la tarifa excluye FELCO 2e y FELCO 834 de la subida)
+  const subtotalSujetoSubida = lineas
+    .filter(l => !/2e|834/i.test(l.producto || ''))
+    .reduce((s, l) => s + l.subtotal_neto, 0);
+  const ahorroVsSubida = +(subtotalSujetoSubida * 0.06).toFixed(2);
+ 
+  return {
+    ...oferta,
+    lineas,
+    subtotal_neto: subtotalNeto,
+    total_con_descuento: totalConDescuento,
+    pvp_sugerido_total: subtotalPvp,
+    margen_medio_pct: margenMedioPct,
+    ahorro_vs_subida_eur: ahorroVsSubida,
+  };
+}
+ 
 function parrafoTitulo(texto) {
   return new Paragraph({
     spacing: { before: 300, after: 100 },
@@ -230,7 +277,7 @@ function tablaCompetencia(competencia) {
 // ── TABLA DE OFERTA (informe Cliente) ──
 function tablaOferta(oferta) {
   if (!oferta?.lineas?.length) return null;
-  const colWidths = [3800, 900, 1830, 1830];
+  const colWidths = [3200, 700, 1450, 1450, 1450];
   const totalWidth = colWidths.reduce((a, b) => a + b, 0);
  
   const filaHeader = new TableRow({
@@ -238,7 +285,8 @@ function tablaOferta(oferta) {
       celdaHeader('Producto', colWidths[0]),
       celdaHeader('Uds', colWidths[1]),
       celdaHeader('Precio neto', colWidths[2]),
-      celdaHeader('Subtotal neto', colWidths[3]),
+      celdaHeader('PVP', colWidths[3]),
+      celdaHeader('Subtotal neto', colWidths[4]),
     ]
   });
  
@@ -247,7 +295,8 @@ function tablaOferta(oferta) {
       celdaCuerpo(l.producto, colWidths[0], i, AlignmentType.LEFT, true),
       celdaCuerpo(`${l.cantidad ?? ''}`, colWidths[1], i, AlignmentType.RIGHT),
       celdaCuerpo(fmtEUR(l.precio_neto_unitario), colWidths[2], i, AlignmentType.RIGHT),
-      celdaCuerpo(fmtEUR(l.subtotal_neto), colWidths[3], i, AlignmentType.RIGHT, true),
+      celdaCuerpo(fmtEUR(l.pvp_unitario), colWidths[3], i, AlignmentType.RIGHT),
+      celdaCuerpo(fmtEUR(l.subtotal_neto), colWidths[4], i, AlignmentType.RIGHT, true),
     ]
   }));
  
@@ -502,7 +551,7 @@ async function createDocx(datos, tipoInforme) {
       argVsCompetenciaLista.forEach(a => children.push(parrafoBullet(a)));
     }
  
-    const oferta = datos.informe_cliente.oferta_recomendada;
+    const oferta = recalcularOferta(datos.informe_cliente.oferta_recomendada);
     const tabla = tablaOferta(oferta);
     if (tabla) {
       children.push(parrafoSubtitulo('Oferta recomendada'));
