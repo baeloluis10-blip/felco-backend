@@ -16,4 +16,5 @@ app.get('/health', (req, res) => res.json({ ok: true, mensaje: 'Servidor funcion
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('Servidor corriendo en http://localhost:' + PORT);
+  console.log('BUILD: 2026-06-18 — cuadro resumen Producto + tarifas PDF + fix oferta cliente');
 });
