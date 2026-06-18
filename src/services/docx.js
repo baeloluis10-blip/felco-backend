@@ -53,6 +53,28 @@ function parrafoBullet(texto) {
   });
 }
 
+// Convierte cualquier elemento de un array (string, número, objeto anidado)
+// en texto legible y descarta los que queden vacíos. Esto evita títulos de
+// sección sin contenido cuando la IA devuelve un objeto en vez de un string
+// (p. ej. {"riesgo":"...","probabilidad":"...","impacto":"..."} en vez de
+// "Riesgo: ... — Probabilidad: ... — Impacto: ...").
+function normalizarLista(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map(item => {
+      if (item === null || item === undefined) return '';
+      if (typeof item === 'string') return item.trim();
+      if (typeof item === 'number') return String(item);
+      if (typeof item === 'object') {
+        return Object.values(item)
+          .filter(v => v !== null && v !== undefined && String(v).trim() !== '')
+          .join(' — ');
+      }
+      return String(item);
+    })
+    .filter(texto => texto.trim().length > 0);
+}
+
 function lineaDivisoria() {
   return new Paragraph({
     spacing: { before: 100, after: 100 },
@@ -305,10 +327,11 @@ async function createDocx(datos, tipoInforme) {
   }
 
   // ── OPORTUNIDADES (solo si hay datos) ─────────────────────────
-  if (datos.oportunidades?.length > 0) {
+  const oportunidadesLista = normalizarLista(datos.oportunidades);
+  if (oportunidadesLista.length > 0) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Oportunidades detectadas'));
-    datos.oportunidades.forEach(op => children.push(parrafoBullet(op)));
+    oportunidadesLista.forEach(op => children.push(parrafoBullet(op)));
   }
 
   // ── COMPETENCIA ───────────────────────────────────────────────
@@ -330,13 +353,15 @@ async function createDocx(datos, tipoInforme) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Análisis de producto'));
     bloqueDiagnostico(datos.informe_producto.diagnostico_competitivo).forEach(p => children.push(p));
-    if (datos.informe_producto.gaps_detectados?.length > 0) {
+    const gapsLista = normalizarLista(datos.informe_producto.gaps_detectados);
+    if (gapsLista.length > 0) {
       children.push(parrafoSubtitulo('Gaps detectados'));
-      datos.informe_producto.gaps_detectados.forEach(g => children.push(parrafoBullet(g)));
+      gapsLista.forEach(g => children.push(parrafoBullet(g)));
     }
-    if (datos.informe_producto.acciones_recomendadas?.length > 0) {
+    const accionesProductoLista = normalizarLista(datos.informe_producto.acciones_recomendadas);
+    if (accionesProductoLista.length > 0) {
       children.push(parrafoSubtitulo('Acciones recomendadas'));
-      datos.informe_producto.acciones_recomendadas.forEach(a => children.push(parrafoBullet(a)));
+      accionesProductoLista.forEach(a => children.push(parrafoBullet(a)));
     }
   }
 
@@ -345,17 +370,20 @@ async function createDocx(datos, tipoInforme) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Informe Marketing'));
     bloqueDiagnostico(datos.informe_marketing.diagnostico_posicionamiento).forEach(p => children.push(p));
-    if (datos.informe_marketing.materiales_que_faltan?.length > 0) {
+    const materialesLista = normalizarLista(datos.informe_marketing.materiales_que_faltan);
+    if (materialesLista.length > 0) {
       children.push(parrafoSubtitulo('Materiales que faltan'));
-      datos.informe_marketing.materiales_que_faltan.forEach(m => children.push(parrafoBullet(m)));
+      materialesLista.forEach(m => children.push(parrafoBullet(m)));
     }
-    if (datos.informe_marketing.acciones_locales?.length > 0) {
+    const accionesLocalesLista = normalizarLista(datos.informe_marketing.acciones_locales);
+    if (accionesLocalesLista.length > 0) {
       children.push(parrafoSubtitulo('Acciones locales'));
-      datos.informe_marketing.acciones_locales.forEach(a => children.push(parrafoBullet(a)));
+      accionesLocalesLista.forEach(a => children.push(parrafoBullet(a)));
     }
-    if (datos.informe_marketing.argumentario_cliente_final?.length > 0) {
+    const argumentarioLista = normalizarLista(datos.informe_marketing.argumentario_cliente_final);
+    if (argumentarioLista.length > 0) {
       children.push(parrafoSubtitulo('Argumentario para cliente final'));
-      datos.informe_marketing.argumentario_cliente_final.forEach(a => children.push(parrafoBullet(a)));
+      argumentarioLista.forEach(a => children.push(parrafoBullet(a)));
     }
     if (datos.informe_marketing.campana_junio_relevante) {
       children.push(parrafoSubtitulo('Campaña junio 2026'));
@@ -372,13 +400,15 @@ async function createDocx(datos, tipoInforme) {
     children.push(parrafoTexto(datos.informe_direccion.resumen_ejecutivo || ''));
     children.push(parrafoSubtitulo('Oportunidad estimada'));
     children.push(parrafoTexto(fmtEUR(datos.informe_direccion.oportunidad_estimada_eur || 0)));
-    if (datos.informe_direccion.riesgos?.length > 0) {
+    const riesgosLista = normalizarLista(datos.informe_direccion.riesgos);
+    if (riesgosLista.length > 0) {
       children.push(parrafoSubtitulo('Riesgos'));
-      datos.informe_direccion.riesgos.forEach(r => children.push(parrafoBullet(r)));
+      riesgosLista.forEach(r => children.push(parrafoBullet(r)));
     }
-    if (datos.informe_direccion.proximos_pasos?.length > 0) {
+    const proximosPasosLista = normalizarLista(datos.informe_direccion.proximos_pasos);
+    if (proximosPasosLista.length > 0) {
       children.push(parrafoSubtitulo('Próximos pasos'));
-      datos.informe_direccion.proximos_pasos.forEach(p => children.push(parrafoBullet(p)));
+      proximosPasosLista.forEach(p => children.push(parrafoBullet(p)));
     }
   }
 
@@ -389,15 +419,17 @@ async function createDocx(datos, tipoInforme) {
     bloqueDiagnostico(datos.informe_it.diagnostico_tecnologico).forEach(p => children.push(p));
     children.push(parrafoSubtitulo('Sistemas del cliente'));
     children.push(parrafoTexto(datos.informe_it.sistemas_cliente || '—'));
-    if (datos.informe_it.integraciones_solicitadas?.length > 0) {
+    const integracionesLista = normalizarLista(datos.informe_it.integraciones_solicitadas);
+    if (integracionesLista.length > 0) {
       children.push(parrafoSubtitulo('Integraciones solicitadas'));
-      datos.informe_it.integraciones_solicitadas.forEach(i => children.push(parrafoBullet(i)));
+      integracionesLista.forEach(i => children.push(parrafoBullet(i)));
     }
     children.push(parrafoSubtitulo('Prioridad'));
     children.push(parrafoTexto(datos.informe_it.prioridad || '—'));
-    if (datos.informe_it.acciones_it?.length > 0) {
+    const accionesItLista = normalizarLista(datos.informe_it.acciones_it);
+    if (accionesItLista.length > 0) {
       children.push(parrafoSubtitulo('Acciones recomendadas'));
-      datos.informe_it.acciones_it.forEach(a => children.push(parrafoBullet(a)));
+      accionesItLista.forEach(a => children.push(parrafoBullet(a)));
     }
   }
 
@@ -410,9 +442,10 @@ async function createDocx(datos, tipoInforme) {
     children.push(parrafoSubtitulo('Propuesta de valor'));
     children.push(parrafoTexto(datos.informe_cliente.propuesta_valor_personalizada || ''));
 
-    if (datos.informe_cliente.argumentario_vs_competencia?.length > 0) {
+    const argVsCompetenciaLista = normalizarLista(datos.informe_cliente.argumentario_vs_competencia);
+    if (argVsCompetenciaLista.length > 0) {
       children.push(parrafoSubtitulo('Por qué FELCO / ALPEN'));
-      datos.informe_cliente.argumentario_vs_competencia.forEach(a => children.push(parrafoBullet(a)));
+      argVsCompetenciaLista.forEach(a => children.push(parrafoBullet(a)));
     }
 
     const oferta = datos.informe_cliente.oferta_recomendada;

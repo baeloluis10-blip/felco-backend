@@ -217,7 +217,22 @@ Genera el informe JSON completo según la estructura del system prompt.`
   const fin = texto_respuesta.lastIndexOf('}');
   if (inicio === -1 || fin === -1) throw new Error('No se encontró JSON en la respuesta');
   const json_limpio = texto_respuesta.substring(inicio, fin + 1);
-  return JSON.parse(json_limpio);
+  const datos = JSON.parse(json_limpio);
+
+  // Log de verificación: si alguno de estos campos viene vacío, queda
+  // registrado en los logs de Railway para poder revisar la respuesta cruda.
+  const camposListaClave = {
+    oportunidades: datos.oportunidades,
+    riesgos: datos.informe_direccion?.riesgos,
+    proximos_pasos: datos.informe_direccion?.proximos_pasos,
+  };
+  Object.entries(camposListaClave).forEach(([campo, valor]) => {
+    if (tipoInforme === 'direccion' || campo === 'oportunidades') {
+      console.log(`Campo "${campo}":`, JSON.stringify(valor));
+    }
+  });
+
+  return datos;
 }
 
 module.exports = { generateReport };
