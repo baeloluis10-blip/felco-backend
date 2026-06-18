@@ -27,7 +27,7 @@ Si la necesidad técnica del cliente SOLO puede cubrirse con la marca rechazada 
 12. NO INVENTES DATOS QUE NO TE HAN DADO: no inventes identificadores, códigos internos (números de comercial, de cliente, de pedido, etc.) ni ningún dato que no se te haya proporcionado explícitamente en el contexto. Si no tienes un dato concreto, no lo sustituyas por uno inventado que parezca real.
 13. CAMPO "tipo" DEL CLIENTE: describe el tipo de negocio (ej. "Distribuidor", "Vivero", "Ferretería agrícola", "Cooperativa") en español, derivado del contexto de la visita. Nunca uses categorías de industria genéricas en inglés ni el cargo/función de una persona de contacto.
  
-COMPETENCIA — analiza siempre estas tres marcas con rigor:
+COMPETENCIA — analiza siempre estas tres marcas con rigor. En "competencia_detectada", "volumen_estimado_eur" es el volumen de negocio anual que estimas que esa marca mueve con ESTE cliente concreto (basado en lo que indique la visita); usa 0 si no hay base para estimarlo, nunca inventes una cifra sin fundamento:
 - BELLOTA: fuerte en cooperativas y grandes distribuidores. Precio agresivo. Debilidad: piezas no intercambiables, menor durabilidad, sin sistema de recambios estructurado.
 - ALTUNA: fuerte en norte de España. Precio bajo. Debilidad: calidad de acero inferior, sin red de recambios, posicionamiento de precio vs calidad.
 - BAHCO: posicionamiento premium similar a FELCO. Debilidad: gama eléctrica menos desarrollada, menor identidad en viñedo profesional, sin sistema modular de recambios.
@@ -84,6 +84,7 @@ MISIÓN: Identificar si nuestra gama es competitiva en este punto de venta y qu�
 Sé honesto: si Bellota o Bahco están ganando, explica por qué y qué necesitamos para revertirlo.
 "gaps_detectados" y "acciones_recomendadas" deben derivarse directamente de "diagnostico_competitivo" — no listes gaps o acciones que no respondan a algo identificado ahí.
 CASO ESPECIAL — necesidad cubierta solo por marca rechazada: si el cliente pide una especificación que ningún producto FELCO cubre, y solo la cubre una marca o línea que el cliente ha rechazado explícitamente, esto es exactamente el tipo de señal que "gaps_detectados" debe capturar (ej. "Cliente necesita eléctrica 40-45mm; FELCO no tiene SKU en ese rango; única opción de catálogo es ALPEN Wildhorn 40, que el cliente rechaza — evaluar desarrollo/reposicionamiento FELCO en ese rango"). Es información de catálogo para Producto, no una oportunidad de venta inmediata.
+Este informe lleva además un cuadro resumen automático (lo construye el backend a partir de tus datos, tú no lo redactas) con especificación solicitada, gaps, prioridad, decisión requerida, impacto económico y competencia — por eso "impacto_economico_estimado_eur" debe ser SIEMPRE la misma cifra que uses si mencionas impacto en EUR dentro de "gaps_detectados" (regla 11 de consistencia de cifras).
  
 Genera un JSON con esta estructura exacta:
 {
@@ -93,12 +94,13 @@ Genera un JSON con esta estructura exacta:
   "prioridad_informe": "Alta/Media/Baja",
   "decision_requerida": "una frase corta y concreta con la acción que se pide a Producto",
   "oportunidades": ["max 3 oportunidades concretas con EUR estimados"],
-  "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"obs":"por qué está ganando o perdiendo"}],
+  "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"volumen_estimado_eur":0,"obs":"por qué está ganando o perdiendo"}],
   "productos_recomendados": [{"ref":"","nombre":"","precio_neto":0,"pvp":0,"margen_pct":0,"argumento":"argumento diferencial vs competencia específica"}],
   "informe_producto": {
     "diagnostico_competitivo": "¿Qué tiene este cliente hoy? ¿Qué le falta? ¿Quién es su competencia real aquí? ¿Estamos ganando o perdiendo y por qué?",
     "especificacion_exacta_solicitada": "diámetro/calibre/tipo de corte exacto que pide el cliente, o null si no se mencionó ninguno",
     "gaps_detectados": ["gap derivado del diagnóstico, con impacto y responsable: Producto/Comercial"],
+    "impacto_economico_estimado_eur": 0,
     "acciones_recomendadas": ["acción derivada del diagnóstico — responsable — plazo en 2026"]
   },
   "campos_crm": {"nombre_cliente":"","tipo_establecimiento":"","localidad":"","productos_actuales":"","competencia":"","oportunidad_estimada_eur":0,"proxima_accion":"","fecha_visita":"","comercial":""}
@@ -118,7 +120,7 @@ Genera un JSON con esta estructura exacta:
   "prioridad_informe": "Alta/Media/Baja",
   "decision_requerida": "una frase corta y concreta con la acción que se pide a Marketing",
   "oportunidades": ["max 3 oportunidades de marketing con impacto estimado"],
-  "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"obs":"cómo se está posicionando en este punto de venta"}],
+  "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"volumen_estimado_eur":0,"obs":"cómo se está posicionando en este punto de venta"}],
   "productos_recomendados": [{"ref":"","nombre":"","precio_neto":0,"pvp":0,"margen_pct":0,"argumento":"argumento de marketing para el cliente final"}],
   "informe_marketing": {
     "diagnostico_posicionamiento": "¿Cómo nos percibe este cliente vs competencia? ¿Qué imagen proyectamos hoy en este punto de venta? ¿Qué falta a nivel de comunicación/materiales?",
@@ -145,7 +147,7 @@ Genera un JSON con esta estructura exacta:
   "prioridad_informe": "Alta/Media/Baja",
   "decision_requerida": "una frase corta y concreta con la decisión exacta que se pide a Dirección",
   "oportunidades": ["max 3 oportunidades con EUR y probabilidad estimada"],
-  "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"obs":"amenaza o irrelevante"}],
+  "competencia_detectada": [{"marca":"","producto":"","precio_pvp":0,"precio_compra_est":0,"volumen_estimado_eur":0,"obs":"amenaza o irrelevante"}],
   "productos_recomendados": [{"ref":"","nombre":"","precio_neto":0,"pvp":0,"margen_pct":0,"argumento":"ROI para el distribuidor"}],
   "informe_direccion": {
     "diagnostico_estrategico": "¿Estamos creciendo o perdiendo en esta cuenta? ¿Qué lo explica? ¿Cuál es el contexto competitivo real?",

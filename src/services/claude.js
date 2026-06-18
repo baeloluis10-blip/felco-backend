@@ -85,7 +85,8 @@ async function prepareArchivos(comercialId) {
     const archivos = await listFiles(comercialId);
     const contenidos = [];
     let totalChars = 0;
-    const MAX_CHARS = 40000;
+    const MAX_CHARS = 60000;
+    const MAX_CHARS_POR_PDF = 15000; // evita que un PDF grande agote el presupuesto de los demás
     const LIMITE_DOCUMENTO_VISUAL = 5000000; // por encima de esto, solo se envía como texto extraído
  
     for (const archivo of archivos.slice(0, 10)) {
@@ -111,7 +112,9 @@ async function prepareArchivos(comercialId) {
         if (textoExtraido && textoExtraido.trim().length > 200) {
           // PDF con texto real (tarifas, listados): se manda como texto,
           // independientemente de lo grande que sea el PDF original.
-          const restante = MAX_CHARS - totalChars;
+          // Se limita por archivo para que uno solo no agote el presupuesto
+          // compartido y deje a los demás PDFs sin espacio.
+          const restante = Math.min(MAX_CHARS_POR_PDF, MAX_CHARS - totalChars);
           const truncado = textoExtraido.substring(0, Math.max(0, restante));
           contenidos.push({
             type: 'text',

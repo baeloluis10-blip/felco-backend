@@ -210,9 +210,91 @@ function celdaCuerpo(texto, ancho, i, alineacion = AlignmentType.LEFT, bold = fa
   });
 }
  
+function celdaEtiqueta(texto, ancho) {
+  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
+  const borders = { top: border, bottom: border, left: border, right: border };
+  return new TableCell({
+    borders,
+    width: { size: ancho, type: WidthType.DXA },
+    shading: { fill: 'F2F2F2', type: ShadingType.CLEAR },
+    margins: { top: 80, bottom: 80, left: 120, right: 120 },
+    children: [new Paragraph({
+      children: [new TextRun({ text: texto, font: 'Arial', size: 18, bold: true, color: GRIS_OSCURO })]
+    })]
+  });
+}
+ 
+function celdaValorMultilinea(lineas, ancho) {
+  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
+  const borders = { top: border, bottom: border, left: border, right: border };
+  const items = (Array.isArray(lineas) ? lineas : [lineas])
+    .filter(l => l !== null && l !== undefined && String(l).trim() !== '');
+  const children = items.length > 0
+    ? items.map(linea => new Paragraph({
+        spacing: { before: 20, after: 20 },
+        children: [new TextRun({ text: String(linea), font: 'Arial', size: 18, color: NEGRO })]
+      }))
+    : [new Paragraph({ children: [new TextRun({ text: '—', font: 'Arial', size: 18, color: NEGRO })] })];
+  return new TableCell({
+    borders,
+    width: { size: ancho, type: WidthType.DXA },
+    margins: { top: 80, bottom: 80, left: 120, right: 120 },
+    children
+  });
+}
+ 
+// Cuadro resumen para Producto: se construye en código a partir de datos
+// que ya existen en otras partes del informe, para que nunca pueda
+// desincronizarse con el resto del documento (regla 11, consistencia de cifras).
+function tablaResumenProducto(datos) {
+  const colWidths = [2400, 6160];
+  const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+  const ip = datos.informe_producto || {};
+ 
+  const competenciaLineas = (datos.competencia_detectada || [])
+    .filter(c => c.marca)
+    .map(c => {
+      const partes = [c.marca];
+      if (Number(c.precio_pvp) > 0) partes.push(`PVP ${fmtEUR(c.precio_pvp)}`);
+      if (Number(c.volumen_estimado_eur) > 0) partes.push(`vol. est. ${fmtEUR(c.volumen_estimado_eur)}/año`);
+      return partes.join(' — ');
+    });
+ 
+  const filas = [
+    ['Especificación solicitada', ip.especificacion_exacta_solicitada || '—'],
+    ['Gaps detectados', normalizarLista(ip.gaps_detectados)],
+    ['Prioridad', datos.prioridad_informe ? String(datos.prioridad_informe).toUpperCase() : '—'],
+    ['Decisión requerida', datos.decision_requerida || '—'],
+    ['Impacto económico estimado', ip.impacto_economico_estimado_eur ? fmtEUR(ip.impacto_economico_estimado_eur) : '—'],
+    ['Competencia relevante', competenciaLineas],
+  ];
+ 
+  const rows = filas.map(([label, valor]) => new TableRow({
+    children: [
+      celdaEtiqueta(label, colWidths[0]),
+      celdaValorMultilinea(valor, colWidths[1]),
+    ]
+  }));
+ 
+  return new Table({
+    width: { size: totalWidth, type: WidthType.DXA },
+    columnWidths: colWidths,
+    rows
+  });
+}
+ 
 function tablaProductos(productos) {
   const colWidths = [1200, 2000, 900, 900, 800, 2560];
   const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+ 
+  const celdaPrecio = (valor) => {
+    const num = Number(valor);
+    return num > 0 ? fmtEUR(num) : '—';
+  };
+  const celdaPct = (valor) => {
+    const num = Number(valor);
+    return num > 0 ? `${num}%` : '—';
+  };
  
   const filaHeader = new TableRow({
     children: [
@@ -229,9 +311,9 @@ function tablaProductos(productos) {
     children: [
       celdaCuerpo(p.ref, colWidths[0], i, AlignmentType.LEFT, true),
       celdaCuerpo(p.nombre, colWidths[1], i),
-      celdaCuerpo(`${p.precio_neto}`, colWidths[2], i, AlignmentType.RIGHT),
-      celdaCuerpo(`${p.pvp}`, colWidths[3], i, AlignmentType.RIGHT),
-      celdaCuerpo(`${p.margen_pct}%`, colWidths[4], i, AlignmentType.RIGHT),
+      celdaCuerpo(celdaPrecio(p.precio_neto), colWidths[2], i, AlignmentType.RIGHT),
+      celdaCuerpo(celdaPrecio(p.pvp), colWidths[3], i, AlignmentType.RIGHT),
+      celdaCuerpo(celdaPct(p.margen_pct), colWidths[4], i, AlignmentType.RIGHT),
       celdaCuerpo(p.argumento, colWidths[5], i),
     ]
   }));
@@ -431,6 +513,9 @@ async function createDocx(datos, tipoInforme) {
   if (tipoInforme === 'producto' && datos.informe_producto) {
     children.push(lineaDivisoria());
     children.push(parrafoTitulo('Análisis de producto'));
+    children.push(parrafoSubtitulo('Resumen para Producto'));
+    children.push(tablaResumenProducto(datos));
+    children.push(new Paragraph({ spacing: { before: 100 }, children: [] }));
     bloqueDiagnostico(datos.informe_producto.diagnostico_competitivo).forEach(p => children.push(p));
     if (datos.informe_producto.especificacion_exacta_solicitada) {
       children.push(parrafoSubtitulo('Especificación exacta solicitada'));
