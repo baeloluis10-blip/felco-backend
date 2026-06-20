@@ -12,17 +12,55 @@ async function xlsxToText(buffer, fileName) {
   try {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     let texto = `--- Contenido de ${fileName} ---\n`;
+ 
     workbook.SheetNames.forEach(sheetName => {
       const hoja = workbook.Sheets[sheetName];
-      const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+      const filasCrudas = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: '' });
+      if (!filasCrudas.length) return;
+ 
+      // Muchas tarifas tienen varias filas de logo/dirección/contacto antes
+      // de la fila de cabecera real. Se detecta automáticamente buscando,
+      // entre las primeras 20 filas, la que tenga más celdas no vacías y
+      // sean mayoritariamente texto (no números) — eso suele ser la
+      // cabecera real, a diferencia de las filas de título/contacto
+      // (pocas celdas) o de producto (mezcla texto+números).
+      const ventana = filasCrudas.slice(0, 20);
+      let headerIdx = 0;
+      let mejorPuntuacion = -1;
+      ventana.forEach((fila, idx) => {
+        const noVacias = fila.filter(c => c !== '' && c !== null && c !== undefined);
+        if (noVacias.length === 0) return;
+        const todasTexto = noVacias.every(c => typeof c === 'string');
+        const puntuacion = noVacias.length + (todasTexto ? 0.5 : 0);
+        if (puntuacion > mejorPuntuacion) {
+          mejorPuntuacion = puntuacion;
+          headerIdx = idx;
+        }
+      });
+ 
+      const cabeceras = filasCrudas[headerIdx].map((c, i) => (c || `Columna${i + 1}`).toString().trim());
       texto += `\nHoja: ${sheetName}\n`;
-      filas.slice(0, 100).forEach(fila => {
-        const linea = Object.entries(fila)
-          .map(([k, v]) => `${k}: ${v}`)
+ 
+      // Filas con una sola celda rellena (ej. "Tijeras de batería con cable")
+      // son encabezados de categoría/sección, no productos — se conservan
+      // como marcador de sección en vez de tratarlas como una fila de datos.
+      filasCrudas.slice(headerIdx + 1).forEach(fila => {
+        const noVacias = fila.filter(c => c !== '' && c !== null && c !== undefined);
+        if (noVacias.length === 0) return;
+ 
+        if (noVacias.length === 1 && fila[0] && String(fila[0]).trim()) {
+          texto += `\n## ${String(fila[0]).trim()}\n`;
+          return;
+        }
+ 
+        const linea = cabeceras
+          .map((cab, i) => (fila[i] !== '' && fila[i] !== undefined ? `${cab}: ${fila[i]}` : null))
+          .filter(Boolean)
           .join(' | ');
-        texto += linea + '\n';
+        if (linea) texto += linea + '\n';
       });
     });
+ 
     return texto;
   } catch (e) {
     console.warn(`Error convirtiendo XLSX ${fileName}:`, e.message);
@@ -85,8 +123,9 @@ async function prepareArchivos(comercialId) {
     const archivos = await listFiles(comercialId);
     const contenidos = [];
     let totalChars = 0;
-    const MAX_CHARS = 60000;
-    const MAX_CHARS_POR_PDF = 15000; // evita que un PDF grande agote el presupuesto de los demás
+    const MAX_CHARS = 90000;
+    const MAX_CHARS_POR_PDF = 15000;  // catálogos/leaflets: complementarios
+    const MAX_CHARS_POR_XLSX = 30000; // tarifas: fuente principal de precios, más presupuesto
     const LIMITE_DOCUMENTO_VISUAL = 5000000; // por encima de esto, solo se envía como texto extraído
  
     for (const archivo of archivos.slice(0, 10)) {
@@ -149,13 +188,16 @@ async function prepareArchivos(comercialId) {
           }
         });
  
-      } else if (false && ['xlsx', 'xls'].includes(ext)) {
+      } else if (['xlsx', 'xls'].includes(ext)) {
         const texto = await xlsxToText(buffer, archivo.name);
         if (texto) {
-          const truncado = texto.substring(0, Math.min(3000, MAX_CHARS - totalChars));
+          const restante = Math.min(MAX_CHARS_POR_XLSX, MAX_CHARS - totalChars);
+          const truncado = texto.substring(0, Math.max(0, restante));
           contenidos.push({ type: 'text', text: truncado });
           totalChars += truncado.length;
-          console.log(`XLSX convertido a texto: ${archivo.name} (${truncado.length} chars)`);
+          console.log(`XLSX convertido a texto: ${archivo.name} (${truncado.length} de ${texto.length} chars)`);
+        } else {
+          console.warn(`XLSX sin contenido legible, omitido: ${archivo.name}`);
         }
  
       } else if (ext === 'csv') {
