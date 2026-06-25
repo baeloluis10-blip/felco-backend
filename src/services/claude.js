@@ -118,7 +118,7 @@ async function buscarClienteEnBBDD(comercialId, nombreCliente) {
   }
 }
  
-async function prepareArchivos(comercialId) {
+async function prepareArchivos(comercialId, nombreCliente = null) {
   try {
     const archivos = await listFiles(comercialId);
     const contenidos = [];
@@ -191,8 +191,28 @@ async function prepareArchivos(comercialId) {
       } else if (['xlsx', 'xls'].includes(ext)) {
         const texto = await xlsxToText(buffer, archivo.name);
         if (texto) {
+          // Si parece un archivo de ventas (tiene 'data' o 'ventas' en el nombre),
+          // filtrar solo las filas del cliente actual para no enviar 228 clientes a la IA.
+          const esVentas = /ventas|data|sales/i.test(archivo.name);
+          let textoFinal = texto;
+          if (esVentas && nombreCliente) {
+            const nombreLimpio = nombreCliente.trim().toLowerCase();
+            const lineas = texto.split('\n');
+            const cabeceraYTitulo = lineas.slice(0, 3);
+            const filasCliente = lineas.slice(3).filter(l =>
+              l.toLowerCase().includes(nombreLimpio) ||
+              l.startsWith('##') // conservar encabezados de sección
+            );
+            if (filasCliente.length > 0) {
+              textoFinal = [...cabeceraYTitulo, `\nDatos de ventas para ${nombreCliente}:`, ...filasCliente].join('\n');
+              console.log(`XLSX ventas filtrado por cliente "${nombreCliente}": ${filasCliente.length} filas`);
+            } else {
+              console.log(`XLSX ventas: cliente "${nombreCliente}" no encontrado, omitiendo`);
+              continue;
+            }
+          }
           const restante = Math.min(MAX_CHARS_POR_XLSX, MAX_CHARS - totalChars);
-          const truncado = texto.substring(0, Math.max(0, restante));
+          const truncado = textoFinal.substring(0, Math.max(0, restante));
           contenidos.push({ type: 'text', text: truncado });
           totalChars += truncado.length;
           console.log(`XLSX convertido a texto: ${archivo.name} (${truncado.length} de ${texto.length} chars)`);
@@ -250,7 +270,7 @@ Rellena el campo "cliente" del JSON así:
     }
   }
  
-  const archivosComercial = await prepareArchivos(comercialId);
+  const archivosComercial = await prepareArchivos(comercialId, nombreCliente);
   if (archivosComercial.length > 0) {
     content.push({
       type: 'text',
