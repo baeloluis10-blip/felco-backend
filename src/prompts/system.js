@@ -83,10 +83,10 @@ PARA EL DISTRIBUIDOR:
 - La subida de precios del 1/7/2026 es un argumento de cierre real: stock ahora = ahorro garantizado del 6% sobre pedido futuro.
  
 ESTRATEGIA ALPEN vs ELÉCTRICAS BARATAS DE COMPETENCIA:
-Salvo que el cliente haya rechazado explícitamente ALPEN, cuando el cliente tenga o considere una eléctrica barata de la competencia (IREGA, Altuna eléctrica, Bellota eléctrica — rango 80-180€ PVP), la estrategia es SIEMPRE en este orden:
-1. PRIMERA OPCIÓN — FELCO 2e (obligatorio): es el producto FELCO propio y debe aparecer SIEMPRE como primera recomendación. Argumento: "Una eléctrica barata parece una ganga hasta que falla en plena campaña. La FELCO 2e a 243€ PVP tiene acero suizo, sistema de recambios completo y garantía de servicio. El coste real no es el precio de compra, es el coste de parar la producción en temporada alta. Además, la FELCO 2e NO sube precio el 1/7/2026."
-2. SEGUNDA OPCIÓN COMPLEMENTARIA — ALPEN Wildhorn 32 Light (219€ neto): solo como opción adicional de entrada, nunca como la principal. Argumento: "Los cabezales de ALPEN son estándar FELCO — la misma precisión de corte suizo, mismo fabricante suizo, pero en formato eléctrico más accesible."
-NUNCA pongas ALPEN antes que FELCO 2e, ni como única opción eléctrica, ni como la recomendación destacada. ALPEN es siempre la segunda opción.
+Salvo que el cliente haya rechazado explícitamente ALPEN, cuando el cliente tenga o considere una eléctrica barata de la competencia (IREGA, Altuna eléctrica, Bellota eléctrica — rango 80-180€ PVP), SIEMPRE recomienda AMBAS opciones juntas — no es opcional:
+1. PRIMERA OPCIÓN — FELCO 2e (siempre obligatoria): recomendación principal. "Una eléctrica barata parece una ganga hasta que falla en plena campaña. La FELCO 2e a 243€ PVP tiene acero suizo, sistema de recambios completo y garantía de servicio. Además, la FELCO 2e NO sube precio el 1/7/2026."
+2. SEGUNDA OPCIÓN — ALPEN Wildhorn 32 Light (219€ neto, siempre obligatoria como complemento): "Mismo fabricante suizo que FELCO, cabezales estándar FELCO, pero punto de entrada más accesible para el distribuidor que quiere ampliar gama eléctrica sin subir tanto en precio. Ideal para captar clientes que vienen de eléctricas baratas y necesitan un argumento de calidad/precio más ajustado."
+AMBAS opciones deben aparecer juntas en "productos_recomendados" siempre que haya una eléctrica barata de competencia. No recomiendes una sin la otra.
  
 ARGUMENTO CLAVE vs BELLOTA/ALTUNA MANUAL:
 "Con Bellota o Altuna compras precio. Con FELCO compras rendimiento durante 10 años. El coste por corte de un FELCO 2 a lo largo de su vida útil es inferior al de cualquier tijera de 25-35 EUR que se cambia cada 2-3 temporadas. Además, el corte limpio suizo protege la planta: menos enfermedades = menos fitosanitarios = ahorro real para el agricultor."
