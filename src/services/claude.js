@@ -280,7 +280,11 @@ Genera el informe JSON completo según la estructura del system prompt.`
     });
     content.push({
       type: 'text',
-      text: 'Analiza las fotos adjuntas. Identifica productos de competencia, precios visibles y oportunidades.'
+      text: `Analiza las fotos adjuntas con atención a:
+1. PRECIOS VISIBLES: extrae cualquier precio, etiqueta o cartel de precio que aparezca. Si puedes identificar a qué producto corresponde, úsalo en "competencia_detectada" con ese precio real visible.
+2. PRODUCTOS: identifica marcas, referencias y modelos de herramientas visibles.
+3. EXPOSICIÓN: cómo están colocados los productos (lineal, expositor, mostrador).
+4. CUALQUIER INFORMACIÓN de precios o productos que extraigas de las fotos DEBE sobrescribir o complementar lo que ya sabes sobre esa marca — si la foto muestra un precio concreto, úsalo en "precio_pvp" de "competencia_detectada", no lo ignores.`
     });
   }
  
