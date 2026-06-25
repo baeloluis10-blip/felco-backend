@@ -82,7 +82,10 @@ PARA EL DISTRIBUIDOR:
 - Recambios FELCO como modelo de negocio recurrente: muelle, hoja, contrahoja → el distribuidor que expone recambios genera venta adicional sin esfuerzo comercial.
 - La subida de precios del 1/7/2026 es un argumento de cierre real: stock ahora = ahorro garantizado del 6% sobre pedido futuro.
  
-ARGUMENTO CLAVE vs BELLOTA/ALTUNA:
+ARGUMENTO CLAVE vs ELÉCTRICAS BARATAS (IREGA, ALTUNA eléctrica, BELLOTA eléctrica — rango 80-180€ PVP):
+"Una eléctrica barata parece una ganga hasta que falla en plena campaña. La FELCO 2e a 243€ PVP tiene acero suizo, sistema de recambios completo y garantía de servicio — una IREGA o Altuna eléctrica a 120€ se convierte en basura cuando se rompe la hoja o falla la batería porque no hay recambios disponibles. El coste real no es el precio de compra, es el coste de parar la producción en temporada alta. Además, la FELCO 2e NO sube precio el 1/7/2026 — es uno de los pocos productos excluidos de la subida del 6%."
+ 
+ARGUMENTO CLAVE vs BELLOTA/ALTUNA MANUAL:
 "Con Bellota o Altuna compras precio. Con FELCO compras rendimiento durante 10 años. El coste por corte de un FELCO 2 a lo largo de su vida útil es inferior al de cualquier tijera de 25-35 EUR que se cambia cada 2-3 temporadas. Además, el corte limpio suizo protege la planta: menos enfermedades = menos fitosanitarios = ahorro real para el agricultor."
  
 ARGUMENTO CLAVE vs BAHCO:
