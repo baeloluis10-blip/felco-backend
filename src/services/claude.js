@@ -18,12 +18,6 @@ async function xlsxToText(buffer, fileName) {
       const filasCrudas = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: '' });
       if (!filasCrudas.length) return;
  
-      // Muchas tarifas tienen varias filas de logo/dirección/contacto antes
-      // de la fila de cabecera real. Se detecta automáticamente buscando,
-      // entre las primeras 20 filas, la que tenga más celdas no vacías y
-      // sean mayoritariamente texto (no números) — eso suele ser la
-      // cabecera real, a diferencia de las filas de título/contacto
-      // (pocas celdas) o de producto (mezcla texto+números).
       const ventana = filasCrudas.slice(0, 20);
       let headerIdx = 0;
       let mejorPuntuacion = -1;
@@ -39,11 +33,14 @@ async function xlsxToText(buffer, fileName) {
       });
  
       const cabeceras = filasCrudas[headerIdx].map((c, i) => (c || `Columna${i + 1}`).toString().trim());
+ 
+      // Detectar columnas de precio de distribución para destacarlas
+      const idxPrecioDistrib = cabeceras.findIndex(c =>
+        /distrib|distribuidor|dealer|neto/i.test(c)
+      );
+ 
       texto += `\nHoja: ${sheetName}\n`;
  
-      // Filas con una sola celda rellena (ej. "Tijeras de batería con cable")
-      // son encabezados de categoría/sección, no productos — se conservan
-      // como marcador de sección en vez de tratarlas como una fila de datos.
       filasCrudas.slice(headerIdx + 1).forEach(fila => {
         const noVacias = fila.filter(c => c !== '' && c !== null && c !== undefined);
         if (noVacias.length === 0) return;
@@ -54,7 +51,19 @@ async function xlsxToText(buffer, fileName) {
         }
  
         const linea = cabeceras
-          .map((cab, i) => (fila[i] !== '' && fila[i] !== undefined ? `${cab}: ${fila[i]}` : null))
+          .map((cab, i) => {
+            let val = fila[i];
+            if (val === '' || val === undefined || val === null) return null;
+            // Redondear decimales largos (más de 4 cifras decimales)
+            if (typeof val === 'number' && !Number.isInteger(val)) {
+              val = Math.round(val * 100) / 100;
+            }
+            // Destacar la columna de precio de distribución
+            if (i === idxPrecioDistrib && val !== '' && val !== 'N/D') {
+              return `${cab}: **${val}€**`;
+            }
+            return `${cab}: ${val}`;
+          })
           .filter(Boolean)
           .join(' | ');
         if (linea) texto += linea + '\n';
